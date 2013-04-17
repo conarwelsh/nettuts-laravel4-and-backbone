@@ -1,0 +1,22 @@
+<article>
+	<h3>
+		{{ post.title }} {{ post.id }}
+		<small>{{ post.author_name }}</small>
+	</h3>
+	<div>
+		{{ post.content }}
+	</div>
+</article>
+
+<div>
+	<h2>Add A Comment</h2>
+	{{> comments._form }}
+
+	<section data-role="comments">
+		{{#post.comments}}
+			<div>
+				{{> comments._comment }}
+			</div>
+		{{/post.comments}}
+	</section>
+</div>

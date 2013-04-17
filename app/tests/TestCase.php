@@ -2,6 +2,17 @@
 
 class TestCase extends Illuminate\Foundation\Testing\TestCase {
 
+	public function setUp()
+	{
+		parent::setUp();
+		$this->seed();
+	}
+
+	public function tearDown()
+	{
+		Mockery::close();
+	}
+
 	/**
 	 * Creates the application.
 	 *

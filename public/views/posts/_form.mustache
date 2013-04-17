@@ -1,0 +1,37 @@
+{{#exists}}
+	<form action="/v1/posts/{{ post.id }}" method="post">
+		<input type="hidden" name="_method" value="PUT" />
+{{/exists}}
+{{^exists}}
+	<form action="/v1/posts" method="post">
+{{/exists}}
+	
+	<fieldset>
+
+		<div class="control-group">
+			<label class="control-label"></label>
+			<div class="controls">
+				<input type="text" name="title" value="{{ post.title }}" />
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label"></label>
+			<div class="controls">
+				<input type="text" name="author_name" value="{{ post.author_name }}" />
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label"></label>
+			<div class="controls">
+				<textarea name="content">{{ post.content }}"</textarea>
+			</div>
+		</div>
+
+		<div class="form-actions">
+			<input type="submit" class="btn btn-primary" value="Save" />
+		</div>
+
+	</fieldset>
+</form>

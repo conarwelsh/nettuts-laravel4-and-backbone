@@ -1,0 +1,52 @@
+/**
+ * Import Twitter Bootstrap Base File
+ ******************************************************************************************
+ */
+@import "../../vendor/twitter/bootstrap/less/bootstrap";
+
+
+/**
+ * Define App Styles
+ * I like to do this before the responsive include, so that it can override properly as needed.
+ ******************************************************************************************
+ */
+body {
+    padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+}
+
+/* this will be set the position of our alerts */
+#notifications {
+	width: 300px;
+	position: fixed;
+	top: 50px;
+	left: 50%;
+	margin-left: -150px;
+	text-align: center;
+}
+
+/**
+ * Import Bootstrap's Responsive Overrides
+ * now we allow bootstrap to set the overrides for a responsive layout
+ ******************************************************************************************
+ */
+@import "../../vendor/twitter/bootstrap/less/responsive";
+
+
+/**
+ * Define our variables last, any variable declared here will be used in the includes above
+ * which means that we can override any of the variables used in the bootstrap files easily
+ ******************************************************************************************
+ */
+
+// Scaffolding
+// -------------------------
+@bodyBackground:        #f2f2f2;
+@textColor:             #575757;
+
+// Links
+// -------------------------
+@linkColor:             #41a096;
+
+// Typography
+// -------------------------
+@sansFontFamily:        Arial, Helvetica, sans-serif;
