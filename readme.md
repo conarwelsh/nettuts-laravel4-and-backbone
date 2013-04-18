@@ -1,8 +1,8 @@
-## What we are going to build:
+## What we are going to be building:
 
-- Build a JSON API using Laravel 4
+- JSON API using Laravel 4
 - Use Composer for all server-side dependencies
-- Build a single page app using Backbone.js
+- A single page app using Backbone.js
 - Use NPM to manage all client-side dependencies
 
 > Note: This tutorial assumes that you have Composer, NPM, and a LESS compiler installed.
@@ -14,7 +14,7 @@
 
 ### Git
 
-Let's start by creating a git repository to work in.  For your reference this entire repo will be made publically available.
+Let's start by creating a git repository to work in.  For your reference this entire repo will be made publicly available at [https://github.com/conarwelsh/nettuts-laravel4-and-backbone](https://github.com/conarwelsh/nettuts-laravel4-and-backbone).
 
 	mkdir project && cd project
 	git init
@@ -30,11 +30,11 @@ Laravel 4 uses Composer to install all of its dependencies, but first we will ne
 
 Now we have the application structure, but all of the library files that Laravel needs are not yet installed.  You will notice that at the root of our application there is a file called `composer.json`.  This is the file that will keep track of all the dependencies that our application requires.  Before we tell Composer to download and install them, let's first add a few more dependencies that we are going to need.  We will be adding:
 
-- Jeffrey Way's Generators:  Some very useful commands to greatly improve our workflow by automatically generating file stubs for us.
-- Laravel 4 Mustache:  This will allow us to seemlessly use Mustache.php in our Laravel project
-- Twitter Bootstrap:  We will use the LESS files from this project to speed up our front-end development.
-- PHPUnit:  We will be doing some TDD for our JSON API, PHPUnit will be our testing engine
-- Mockery:  Mockery will help us "mock" objects during our testing
+- [Jeffrey Way's Generators](https://github.com/JeffreyWay/Laravel-4-Generators):  Some very useful commands to greatly improve our workflow by automatically generating file stubs for us.
+- [Laravel 4 Mustache](https://github.com/conarwelsh/mustache-l4):  This will allow us to seemlessly use Mustache.php in our Laravel project
+- [Twitter Bootstrap](http://twitter.github.io/bootstrap/):  We will use the LESS files from this project to speed up our front-end development.
+- [PHPUnit](https://github.com/sebastianbergmann/phpunit/):  We will be doing some TDD for our JSON API, PHPUnit will be our testing engine
+- [Mockery](https://github.com/padraic/mockery):  Mockery will help us "mock" objects during our testing
 
 PHPUnit and Mockery are only required in our development environment, so we will specify that in our composer.json file.
 
@@ -71,7 +71,7 @@ Now we just need to tell Composer to do all of our leg work!  Notice the --dev s
 
 	composer install --dev
 
-After that finishes installing, we will need to inform Laravel of a few of our dependencies.  Laravel uses "service providers" for this purpose.  The basically just tell Laravel how their code is going to interact with the application, and run any necessary setup procedures.  Open up `app/config/app.php` and add the following 2 items to the "providers" array.
+After that finishes installing, we will need to inform Laravel of a few of our dependencies.  Laravel uses "service providers" for this purpose.  These service providers basically just tell Laravel how their code is going to interact with the application, and run any necessary setup procedures.  Open up `app/config/app.php` and add the following 2 items to the "providers" array.
 
 	...
 	
@@ -103,7 +103,7 @@ bootstrap/start.php
 
 Replace "your-machine-name" with whatever the hostname for your machine is.  If you are unsure of what your exact machine name is, you can just type `hostname` at the command prompt (on Mac or Linux), whatever it returns is the value that belongs in this setting.
 
-We want our views to be able to be served to our client from a web request.  Currently, our views are stored outside our public folder, which would means that they are not publically accessible.  Luckily Laravel makes it very easy to move, or add another views folder to our setup!  Open up app/config/view.php and change the `paths` setting to the following, which will change the location of our views path to inside the public folder:
+We want our views to be able to be served to our client from a web request.  Currently, our views are stored outside our `public` folder, which would means that they are not publicly accessible.  Luckily Laravel makes it very easy to move, or add another views folder to our setup!  Open up app/config/view.php and change the `paths` setting to the following, which will change the location of our views path to inside the public folder:
 
 	'paths' => array(__DIR__.'/../../public/views'),
 
@@ -117,9 +117,9 @@ Laravel is now installed, with all of its dependencies.  Now let's setup our Bac
 
 For our client-side dependencies we will use:
 
-- Underscore.js: This is a dependency of Backbone.js
-- Backbone.js: This is our client-side MVC that we will use to build out our application
-- Mustache.js: The Javascript version of our templating library, by using the same templating language both on the client and the server, we can share views, as opposed to duplication logic.
+- [Underscore.js](http://underscorejs.org/): This is a dependency of Backbone.js
+- [Backbone.js](http://backbonejs.org/): This is our client-side MVC that we will use to build out our application
+- [Mustache.js](https://github.com/janl/mustache.js/): The Javascript version of our templating library, by using the same templating language both on the client and the server, we can share views, as opposed to duplication logic.
 
 package.json
 
@@ -175,7 +175,7 @@ For our layout file, Twitter Bootstrap also provides us with some nice starter t
 
 > Note:: notice that I am using a blade extension here, this could just as easily be a mustache template, but I wanted to show you how easy it is to mix the templating engines.  In addition, we get some really useful helpers in our blade files, and since our layout will be rendered on page load, and will not need to be re-rendered by the client, we are safe to use PHP here exclusively.  If for some reason you found yourself needing to render this file on the client-side, you would want to switch this file to use the Mustache template engine instead.
 
-Now that we have all of our basic files in place, let's add some starter content that we can use to test that everything is working as we would expect.  I am providing you with some basic stubs (nicely commented) to get you started.
+Now that we have all of our basic files in place, let's add some starter content that we can use to test that everything is working as we would expect.  I am providing you with some basic stubs to get you started.
 
 public/css/styles.less
 
@@ -307,7 +307,10 @@ public/views/layouts/application.blade.php
 	  </div>
 
 	  <div class="container" data-role="main">
+	    {{--since we are using mustache as the view, it does not have a concept of sections like blade has, so instead of using @yield here, our nested view will just be a variable that we can echo--}}
+
 	    {{ $content }}
+
 	  </div> <!-- /container -->
 
 	  <!-- Placed at the end of the document so the pages load faster -->
@@ -434,11 +437,10 @@ We are going to use Jeffrey Way's generators to generate our resources.  When we
 - Views (index.blade.php, show.blade.php, create.blade.php, edit.blade.php)
 - Migration
 - Seeds
-- Tests
 
 We are going to need only 2 resources for this app: a Post resource, and a Comment resource.
 
-> Note: in a recent update to the generators, I have been receiving a permissions error due to the way my web servers are setup.  To remedy this problem, I just open up the permissions for the tmp folder that the generators use.  Normally I would not open permissions up this way, but this change will only be affected in our development environment so it is safe.
+> Note: in a recent update to the generators, I have been receiving a permissions error due to the way my web servers are setup.  To remedy this problem, I just open up the permissions for the folder that the generators use.  Normally I would not open permissions up this way, but this change will only be affected in our development environment so it is safe.
 	
 	sudo chmod -R 777 vendor/way/generators/src/Way/
 
@@ -665,7 +667,7 @@ Now we can run our migrations, and seed the database. Laravel provides us with a
 
 ### Tests
 
-Testing is one of those topics in development that no one can argue the importance of, however most people tend to ignore due to the learning curve.  However testing is really not that difficult, and can really benefit your application.  For this tutorial, we will setup some basic tests to help us ensure that our API is functioning properly.  We will do this in a TDD style, however if I were to walk you through each test individually, this would prove to be a very long tutorial, so in the interest of brevity, I will just provide you with a few nicely commented set of tests to work from.
+Testing is one of those topics in development that no one can argue the importance of, however most people tend to ignore due to the learning curve.  However testing is really not that difficult, and can really improve your application.  For this tutorial, we will setup some basic tests to help us ensure that our API is functioning properly.  We will do this in a TDD style, however if I were to walk you through each test individually, this would prove to be a very long tutorial, so in the interest of brevity, I will just provide you with some tests to work from.
 
 Before we write any tests though, we should first check the current status of our tests.  Since we installed PHPUnit via composer, we have the binaries available to us to use.  All you need to do is run:
 
@@ -675,7 +677,7 @@ Whoops! We already have a failure!  The test that is failing is actually an exam
 
 	rm -rf app/tests/ExampleTest.php
 
-If you run the PHPUnit command again, you will see that no tests were executed, and we have a clean slate for testing.  The rules of TDD state that we are not allowed to write any production code, until we have failing tests that warrant it.
+If you run the PHPUnit command again, you will see that no tests were executed, and we have a clean slate for testing.  The rules of TDD state that we are not allowed to write any production code, until we have failing tests that warrants it.
 
 > Note: it is possible that if you have an older version of Jeffrey Way's generators that you will actually have a few tests in there that were created by those generators, and those tests are probably failing.  Just delete or overwrite those tests with the ones found below to proceed.
 
@@ -1196,6 +1198,8 @@ You should have a whole ton of failures, and in fact, the test suite probably di
 
 What is actually failing is the assertViewHas method in our controller tests.  It is kind of intimidating to deal with this kind of an error when we have lumped together all of our tests without any production code at all.  This is why you should always write the tests one at a time, as you will find these errors in stride, as opposed to just a huge mess.  For now just follow my lead.
 
+##### Sidebar
+
 Let's break for a quick sidebar discussion on the true responsibilities of an MVC (my opinions of them at least).
 
 - Model: represent the data layer, and handle translating application logic to data-storage logic
@@ -1212,11 +1216,11 @@ In my opinion a controller should not contain any more logic than request and re
 
 If we place these types of logic in our controller, the usage of that functionality is only available to that route.  So where else can we put it... in the model?  If we place this logic in the model, what was a clean abstraction of our database is now becoming cluttered with all kinds of application logic... does not quite feel right.  What if 2 versions of our API have different methods of parsing input data, handling pagination, or validating... are we going to put just alternate versions of the same method all in the model?  Controllers cannot change without breaking routes, and models cannot change without breaking data manipulation.
 
-This is where repositories come into the picture.  Repositories solve the gap between the model and the controller in beautiful fashion.  Our models are able to stay focused specifically on how to manage data coming in and out of the data-layer, and our controllers can focus solely on user input and responses.  We now will have re-usable, swap-able, test-able and version-able classes to work with to handle all of the above needs.  Repositories can now handle all of the growing-pains of our application, whilst leaving controllers and models to do what they do best!
+This is where repositories come into the picture.  Repositories fill the gap between the model and the controller in beautiful fashion.  Our models are able to stay focused specifically on how to manage data coming in and out of the data-layer, and our controllers can focus solely on user input and responses.  We now will have re-usable, swap-able, test-able and version-able classes to work with to handle all of the above needs.  Repositories can now handle all of the growing-pains of our application, whilst leaving controllers and models to do what they do best!
 
 Now that we have a general overview of what I consider to be a very functional application structure... our MVRC... let's start putting the pieces in place and getting our tests to pass.
 
-If you take a read through the controller tests, you will see that all we really care about is how the controller is interacting with the repository.  So let's see how light that makes our PostsController.
+If you take a read through the controller tests, you will see that all we really care about is how the controller is interacting with the repository.  So let's see how light that makes our controllers.
 
 app/controllers/V1/PostsController.php
 
@@ -1422,11 +1426,11 @@ app/controllers/PostsCommentsController.php
 
 	}
 
-It does not get much simpler than that, all it is doing is handing the input data to the repository, and taking the response from that, and handing it to the view.
+It does not get much simpler than that, all it is doing is handing the input data to the repository, taking the response from that, and handing it to the view.
 
 > Note: notice that we added a few more "use" statements to the top of the file, to support the other classes that we are using.  Do not forget this when you are working within a namespace.
 
-The only thing that is a bit tricky in this controller is the constructor.  Notice we are passing in a typed variable, yet there is not point that we have access to the instantiation of this controller to actually insert that class... welcome to dependency injection!  What we are actually doing here is hinting to our controller that we have a dependency needed to run this class.  Laravel will then take the type hint that we provided, and run `App::make('PostRepositoryInterface')`, and insert what is returned into the constructor of the controller for us.
+The only thing that is a bit tricky in this controller is the constructor.  Notice we are passing in a typed variable, yet there is no point that we have access to the instantiation of this controller to actually insert that class... welcome to dependency injection!  What we are actually doing here is hinting to our controller that we have a dependency needed to run this class.  Laravel will then take the type hint that we provided, and run `App::make('PostRepositoryInterface')`, and insert what is returned into the constructor of the controller for us.
 
 The observant of you will notice that what we are trying to pass in as a dependency is an interface, and as you know, an interface cannot be instantiated.  This is where it gets cool, we are actually going to tell Laravel that whenever an instance of `PostRepositoryInterface` is requested, to actually return something else.
 
@@ -2107,7 +2111,7 @@ In addition, if you have a multi-page app (several single page apps), you can de
 	})
 	->where('path', '.*');
 
-> Note: Note: keep in mind the '/' before {path?}. If that slash is there, it will be required in the URL, sometimes this is desired and sometimes not.
+> Note: Note: keep in mind the '/' before {path?}. If that slash is there, it will be required in the URL (with the exception of the index route), sometimes this is desired and sometimes not.
 
 
 
@@ -2125,6 +2129,14 @@ app/routes.php
 
 	<?php
 
+	App::bind('PostRepositoryInterface', 'EloquentPostRepository');
+	App::bind('CommentRepositoryInterface', 'EloquentCommentRepository');
+
+
+
+
+
+	//create a group of routes that will belong to APIv1
 	Route::group(array('prefix' => 'v1'), function()
 	{
 	    Route::resource('posts', 'V1\PostsController');
@@ -2133,26 +2145,36 @@ app/routes.php
 
 
 
-	// Approach #1
+	/**
+	 * Method #1: use catch-all
+	 */
+	// change your existing app route to this:
 	// we are basically just giving it an optional parameter of "anything"
 	// Route::get('/{path?}', function($path = null)
 	// {
-	//    return View::make('app');
+	//     return View::make('layouts.application')->nest('content', 'app');
 	// })
 	// ->where('path', '.*'); //regex to match anything (dots, slashes, letters, numbers, etc)
 
 
-	// Approach #2
+
+	/**
+	 * Method #2: define each route
+	 */
 	Route::get('/', function()
 	{
-	    return View::make('posts.index');
+	    $posts = App::make('PostRepositoryInterface')->paginate();
+	    return View::make('layouts.application')->nest('content', 'posts.index', array(
+			'posts' => $posts
+		));
 	});
 
 	Route::get('posts/{id}', function($id)
 	{
-	    $posts = App::make('EloquentPostsRepository');
-	    $post = $posts->findById($id);
-	    return View::make('posts.show', compact('post'));
+	    $post = App::make('PostRepositoryInterface')->findById($id);
+	    return View::make('layouts.application')->nest('content', 'posts.show', array(
+			'post' => $post
+		));
 	});
 
 
