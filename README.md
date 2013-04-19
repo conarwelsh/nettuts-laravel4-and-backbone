@@ -1,6 +1,6 @@
 ## Laravel 4 & Backbone
 
-For this tutorial, we are going to be building a single page app using Laravel 4 and Backbone.js.  Both frameworks make it very easy to use a template engine other than their respective default, so we are going to use Mustache, which is an engine that is common to both.  Using the same templating language on both sides of our application, will allow us to share our views betweem them, saving us from having to repeat our work multiple times.
+For this tutorial, we are going to be building a single page app using Laravel 4 and Backbone.js.  Both frameworks make it very easy to use a template engine other than their respective default, so we are going to use Mustache, which is an engine that is common to both.  By using the same templating language on both sides of our application, we will be able to share our views betweem them, saving us from having to repeat our work multiple times.
 
 Our Backbone app will be powered by a Laravel 4 JSON API which we will develop.  Laravel 4 comes with some new features that make the development of this API very easy.  I will show you a few tricks along the way to allow you to stay a bit more organized in your development.
 
@@ -883,389 +883,395 @@ class CommentsControllerTest extends TestCase {
 }
 ```
 
-app/tests/controllers/PostsControllerTest.php
+**app/tests/controllers/PostsControllerTest.php**
 
-	<?php
+```php
+<?php
 
-	class PostsControllerTest extends TestCase {
+class PostsControllerTest extends TestCase {
 
-		/**
-		 * Test Basic Route Responses
-		 */
-		public function testIndex()
-		{
-			$response = $this->call('GET', route('v1.posts.index'));
-			$this->assertTrue($response->isOk());
-		}
-
-		public function testShow()
-		{
-			$response = $this->call('GET', route('v1.posts.show', array(1)));
-			$this->assertTrue($response->isOk());
-		}
-
-		public function testCreate()
-		{
-			$response = $this->call('GET', route('v1.posts.create'));
-			$this->assertTrue($response->isOk());
-		}
-
-		public function testEdit()
-		{
-			$response = $this->call('GET', route('v1.posts.edit', array(1)));
-			$this->assertTrue($response->isOk());
-		}
-
-		/**
-		 * Test that controller calls repo as we expect
-		 */
-		public function testIndexShouldCallFindAllMethod()
-		{
-			$mock = Mockery::mock('PostRepositoryInterface');
-			$mock->shouldReceive('findAll')->once()->andReturn('foo');
-			App::instance('PostRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.index'));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testShowShouldCallFindById()
-		{
-			$mock = Mockery::mock('PostRepositoryInterface');
-			$mock->shouldReceive('findById')->once()->andReturn('foo');
-			App::instance('PostRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.show', array(1)));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testCreateShouldCallInstanceMethod()
-		{
-			$mock = Mockery::mock('PostRepositoryInterface');
-			$mock->shouldReceive('instance')->once()->andReturn(array());
-			App::instance('PostRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.create'));
-			$this->assertViewHas('post');
-		}
-
-		public function testEditShouldCallFindByIdMethod()
-		{
-			$mock = Mockery::mock('PostRepositoryInterface');
-			$mock->shouldReceive('findById')->once()->andReturn(array());
-			App::instance('PostRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.edit', array(1)));
-			$this->assertViewHas('post');
-		}
-
-		public function testStoreShouldCallStoreMethod()
-		{
-			$mock = Mockery::mock('PostRepositoryInterface');
-			$mock->shouldReceive('store')->once()->andReturn('foo');
-			App::instance('PostRepositoryInterface', $mock);
-
-			$response = $this->call('POST', route('v1.posts.store'));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testUpdateShouldCallUpdateMethod()
-		{
-			$mock = Mockery::mock('PostRepositoryInterface');
-			$mock->shouldReceive('update')->once()->andReturn('foo');
-			App::instance('PostRepositoryInterface', $mock);
-
-			$response = $this->call('PUT', route('v1.posts.update', array(1)));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testDestroyShouldCallDestroyMethod()
-		{
-			$mock = Mockery::mock('PostRepositoryInterface');
-			$mock->shouldReceive('destroy')->once()->andReturn(true);
-			App::instance('PostRepositoryInterface', $mock);
-
-			$response = $this->call('DELETE', route('v1.posts.destroy', array(1)));
-			$this->assertTrue( empty($response->original) );
-		}
-
+	/**
+	 * Test Basic Route Responses
+	 */
+	public function testIndex()
+	{
+		$response = $this->call('GET', route('v1.posts.index'));
+		$this->assertTrue($response->isOk());
 	}
 
+	public function testShow()
+	{
+		$response = $this->call('GET', route('v1.posts.show', array(1)));
+		$this->assertTrue($response->isOk());
+	}
 
-app/tests/repositories/EloquentCommentRepositoryTest.php
+	public function testCreate()
+	{
+		$response = $this->call('GET', route('v1.posts.create'));
+		$this->assertTrue($response->isOk());
+	}
 
-	<?php
+	public function testEdit()
+	{
+		$response = $this->call('GET', route('v1.posts.edit', array(1)));
+		$this->assertTrue($response->isOk());
+	}
 
-	class EloquentCommentRepositoryTest extends TestCase {
-		
-		public function setUp()
-		{
-			parent::setUp();
-			$this->repo = App::make('EloquentCommentRepository');
-		}
+	/**
+	 * Test that controller calls repo as we expect
+	 */
+	public function testIndexShouldCallFindAllMethod()
+	{
+		$mock = Mockery::mock('PostRepositoryInterface');
+		$mock->shouldReceive('findAll')->once()->andReturn('foo');
+		App::instance('PostRepositoryInterface', $mock);
 
-		public function testFindByIdReturnsModel()
-		{
-			$comment = $this->repo->findById(1,1);
-			$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
-		}
+		$response = $this->call('GET', route('v1.posts.index'));
+		$this->assertTrue(!! $response->original);
+	}
 
-		public function testFindAllReturnsCollection()
-		{
-			$comments = $this->repo->findAll(1);
-			$this->assertTrue($comments instanceof Illuminate\Database\Eloquent\Collection);
-		}
+	public function testShowShouldCallFindById()
+	{
+		$mock = Mockery::mock('PostRepositoryInterface');
+		$mock->shouldReceive('findById')->once()->andReturn('foo');
+		App::instance('PostRepositoryInterface', $mock);
 
-		public function testValidatePasses()
-		{
+		$response = $this->call('GET', route('v1.posts.show', array(1)));
+		$this->assertTrue(!! $response->original);
+	}
+
+	public function testCreateShouldCallInstanceMethod()
+	{
+		$mock = Mockery::mock('PostRepositoryInterface');
+		$mock->shouldReceive('instance')->once()->andReturn(array());
+		App::instance('PostRepositoryInterface', $mock);
+
+		$response = $this->call('GET', route('v1.posts.create'));
+		$this->assertViewHas('post');
+	}
+
+	public function testEditShouldCallFindByIdMethod()
+	{
+		$mock = Mockery::mock('PostRepositoryInterface');
+		$mock->shouldReceive('findById')->once()->andReturn(array());
+		App::instance('PostRepositoryInterface', $mock);
+
+		$response = $this->call('GET', route('v1.posts.edit', array(1)));
+		$this->assertViewHas('post');
+	}
+
+	public function testStoreShouldCallStoreMethod()
+	{
+		$mock = Mockery::mock('PostRepositoryInterface');
+		$mock->shouldReceive('store')->once()->andReturn('foo');
+		App::instance('PostRepositoryInterface', $mock);
+
+		$response = $this->call('POST', route('v1.posts.store'));
+		$this->assertTrue(!! $response->original);
+	}
+
+	public function testUpdateShouldCallUpdateMethod()
+	{
+		$mock = Mockery::mock('PostRepositoryInterface');
+		$mock->shouldReceive('update')->once()->andReturn('foo');
+		App::instance('PostRepositoryInterface', $mock);
+
+		$response = $this->call('PUT', route('v1.posts.update', array(1)));
+		$this->assertTrue(!! $response->original);
+	}
+
+	public function testDestroyShouldCallDestroyMethod()
+	{
+		$mock = Mockery::mock('PostRepositoryInterface');
+		$mock->shouldReceive('destroy')->once()->andReturn(true);
+		App::instance('PostRepositoryInterface', $mock);
+
+		$response = $this->call('DELETE', route('v1.posts.destroy', array(1)));
+		$this->assertTrue( empty($response->original) );
+	}
+
+}
+```
+
+
+**app/tests/repositories/EloquentCommentRepositoryTest.php**
+
+```php
+<?php
+
+class EloquentCommentRepositoryTest extends TestCase {
+	
+	public function setUp()
+	{
+		parent::setUp();
+		$this->repo = App::make('EloquentCommentRepository');
+	}
+
+	public function testFindByIdReturnsModel()
+	{
+		$comment = $this->repo->findById(1,1);
+		$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
+	}
+
+	public function testFindAllReturnsCollection()
+	{
+		$comments = $this->repo->findAll(1);
+		$this->assertTrue($comments instanceof Illuminate\Database\Eloquent\Collection);
+	}
+
+	public function testValidatePasses()
+	{
+		$reply = $this->repo->validate(array(
+			'post_id'     => 1,
+			'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
+			'author_name' => 'Testy McTesterson'
+		));
+
+		$this->assertTrue($reply);
+	}
+
+	public function testValidateFailsWithoutContent()
+	{
+		try {
 			$reply = $this->repo->validate(array(
 				'post_id'     => 1,
+				'author_name' => 'Testy McTesterson'
+			));
+		}
+		catch(ValidationException $expected)
+		{
+			return;
+		}
+
+		$this->fail('ValidationException was not raised');
+	}
+
+	public function testValidateFailsWithoutAuthorName()
+	{
+		try {
+			$reply = $this->repo->validate(array(
+				'post_id'     => 1,
+				'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.'
+			));
+		}
+		catch(ValidationException $expected)
+		{
+			return;
+		}
+
+		$this->fail('ValidationException was not raised');
+	}
+
+	public function testValidateFailsWithoutPostId()
+	{
+		try {
+			$reply = $this->repo->validate(array(
+				'author_name' => 'Testy McTesterson',
+				'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.'
+			));
+		}
+		catch(ValidationException $expected)
+		{
+			return;
+		}
+
+		$this->fail('ValidationException was not raised');
+	}
+
+	public function testStoreReturnsModel()
+	{
+		$comment_data = array(
+			'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
+			'author_name' => 'Testy McTesterson'
+		);
+
+		$comment = $this->repo->store(1, $comment_data);
+
+		$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
+		$this->assertTrue($comment->content === $comment_data['content']);
+		$this->assertTrue($comment->author_name === $comment_data['author_name']);
+	}
+
+	public function testUpdateSaves()
+	{
+		$comment_data = array(
+			'content' => 'The Content Has Been Updated'
+		);
+
+		$comment = $this->repo->update(1, 1, $comment_data);
+
+		$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
+		$this->assertTrue($comment->content === $comment_data['content']);
+	}
+
+	public function testDestroySaves()
+	{
+		$reply = $this->repo->destroy(1,1);
+		$this->assertTrue($reply);
+
+		try {
+			$this->repo->findById(1,1);
+		}
+		catch(NotFoundException $expected)
+		{
+			return;
+		}
+
+		$this->fail('NotFoundException was not raised');
+	}
+
+	public function testInstanceReturnsModel()
+	{
+		$comment = $this->repo->instance();
+		$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
+	}
+
+	public function testInstanceReturnsModelWithData()
+	{
+		$comment_data = array(
+			'title' => 'Un-validated title'
+		);
+
+		$comment = $this->repo->instance($comment_data);
+		$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
+		$this->assertTrue($comment->title === $comment_data['title']);
+	}
+
+}
+```
+
+
+**app/tests/repositories/EloquentPostRepositoryTest.php**
+
+``php
+<?php
+
+class EloquentPostRepositoryTest extends TestCase {
+	
+	public function setUp()
+	{
+		parent::setUp();
+		$this->repo = App::make('EloquentPostRepository');
+	}
+
+	public function testFindByIdReturnsModel()
+	{
+		$post = $this->repo->findById(1);
+		$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
+	}
+
+	public function testFindAllReturnsCollection()
+	{
+		$posts = $this->repo->findAll();
+		$this->assertTrue($posts instanceof Illuminate\Database\Eloquent\Collection);
+	}
+
+	public function testValidatePasses()
+	{
+		$reply = $this->repo->validate(array(
+			'title'       => 'This Should Pass',
+			'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
+			'author_name' => 'Testy McTesterson'
+		));
+
+		$this->assertTrue($reply);
+	}
+
+	public function testValidateFailsWithoutTitle()
+	{
+		try {
+			$reply = $this->repo->validate(array(
 				'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
 				'author_name' => 'Testy McTesterson'
 			));
-
-			$this->assertTrue($reply);
 		}
-
-		public function testValidateFailsWithoutContent()
+		catch(ValidationException $expected)
 		{
-			try {
-				$reply = $this->repo->validate(array(
-					'post_id'     => 1,
-					'author_name' => 'Testy McTesterson'
-				));
-			}
-			catch(ValidationException $expected)
-			{
-				return;
-			}
-
-			$this->fail('ValidationException was not raised');
+			return;
 		}
 
-		public function testValidateFailsWithoutAuthorName()
-		{
-			try {
-				$reply = $this->repo->validate(array(
-					'post_id'     => 1,
-					'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.'
-				));
-			}
-			catch(ValidationException $expected)
-			{
-				return;
-			}
-
-			$this->fail('ValidationException was not raised');
-		}
-
-		public function testValidateFailsWithoutPostId()
-		{
-			try {
-				$reply = $this->repo->validate(array(
-					'author_name' => 'Testy McTesterson',
-					'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.'
-				));
-			}
-			catch(ValidationException $expected)
-			{
-				return;
-			}
-
-			$this->fail('ValidationException was not raised');
-		}
-
-		public function testStoreReturnsModel()
-		{
-			$comment_data = array(
-				'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
-				'author_name' => 'Testy McTesterson'
-			);
-
-			$comment = $this->repo->store(1, $comment_data);
-
-			$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
-			$this->assertTrue($comment->content === $comment_data['content']);
-			$this->assertTrue($comment->author_name === $comment_data['author_name']);
-		}
-
-		public function testUpdateSaves()
-		{
-			$comment_data = array(
-				'content' => 'The Content Has Been Updated'
-			);
-
-			$comment = $this->repo->update(1, 1, $comment_data);
-
-			$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
-			$this->assertTrue($comment->content === $comment_data['content']);
-		}
-
-		public function testDestroySaves()
-		{
-			$reply = $this->repo->destroy(1,1);
-			$this->assertTrue($reply);
-
-			try {
-				$this->repo->findById(1,1);
-			}
-			catch(NotFoundException $expected)
-			{
-				return;
-			}
-
-			$this->fail('NotFoundException was not raised');
-		}
-
-		public function testInstanceReturnsModel()
-		{
-			$comment = $this->repo->instance();
-			$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
-		}
-
-		public function testInstanceReturnsModelWithData()
-		{
-			$comment_data = array(
-				'title' => 'Un-validated title'
-			);
-
-			$comment = $this->repo->instance($comment_data);
-			$this->assertTrue($comment instanceof Illuminate\Database\Eloquent\Model);
-			$this->assertTrue($comment->title === $comment_data['title']);
-		}
-
+		$this->fail('ValidationException was not raised');
 	}
 
-
-app/tests/repositories/EloquentPostRepositoryTest.php
-
-	<?php
-
-	class EloquentPostRepositoryTest extends TestCase {
-		
-		public function setUp()
-		{
-			parent::setUp();
-			$this->repo = App::make('EloquentPostRepository');
-		}
-
-		public function testFindByIdReturnsModel()
-		{
-			$post = $this->repo->findById(1);
-			$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
-		}
-
-		public function testFindAllReturnsCollection()
-		{
-			$posts = $this->repo->findAll();
-			$this->assertTrue($posts instanceof Illuminate\Database\Eloquent\Collection);
-		}
-
-		public function testValidatePasses()
-		{
+	public function testValidateFailsWithoutAuthorName()
+	{
+		try {
 			$reply = $this->repo->validate(array(
 				'title'       => 'This Should Pass',
-				'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
-				'author_name' => 'Testy McTesterson'
+				'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.'
 			));
-
-			$this->assertTrue($reply);
 		}
-
-		public function testValidateFailsWithoutTitle()
+		catch(ValidationException $expected)
 		{
-			try {
-				$reply = $this->repo->validate(array(
-					'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
-					'author_name' => 'Testy McTesterson'
-				));
-			}
-			catch(ValidationException $expected)
-			{
-				return;
-			}
-
-			$this->fail('ValidationException was not raised');
+			return;
 		}
 
-		public function testValidateFailsWithoutAuthorName()
-		{
-			try {
-				$reply = $this->repo->validate(array(
-					'title'       => 'This Should Pass',
-					'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.'
-				));
-			}
-			catch(ValidationException $expected)
-			{
-				return;
-			}
-
-			$this->fail('ValidationException was not raised');
-		}
-
-		public function testStoreReturnsModel()
-		{
-			$post_data = array(
-				'title'       => 'This Should Pass',
-				'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
-				'author_name' => 'Testy McTesterson'
-			);
-
-			$post = $this->repo->store($post_data);
-
-			$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
-			$this->assertTrue($post->title === $post_data['title']);
-			$this->assertTrue($post->content === $post_data['content']);
-			$this->assertTrue($post->author_name === $post_data['author_name']);
-		}
-
-		public function testUpdateSaves()
-		{
-			$post_data = array(
-				'title' => 'The Title Has Been Updated'
-			);
-
-			$post = $this->repo->update(1, $post_data);
-
-			$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
-			$this->assertTrue($post->title === $post_data['title']);
-		}
-
-		public function testDestroySaves()
-		{
-			$reply = $this->repo->destroy(1);
-			$this->assertTrue($reply);
-
-			try {
-				$this->repo->findById(1);
-			}
-			catch(NotFoundException $expected)
-			{
-				return;
-			}
-
-			$this->fail('NotFoundException was not raised');
-		}
-
-		public function testInstanceReturnsModel()
-		{
-			$post = $this->repo->instance();
-			$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
-		}
-
-		public function testInstanceReturnsModelWithData()
-		{
-			$post_data = array(
-				'title' => 'Un-validated title'
-			);
-
-			$post = $this->repo->instance($post_data);
-			$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
-			$this->assertTrue($post->title === $post_data['title']);
-		}
-
+		$this->fail('ValidationException was not raised');
 	}
+
+	public function testStoreReturnsModel()
+	{
+		$post_data = array(
+			'title'       => 'This Should Pass',
+			'content'     => 'Lorem ipsum Fugiat consectetur laborum Ut consequat aliqua.',
+			'author_name' => 'Testy McTesterson'
+		);
+
+		$post = $this->repo->store($post_data);
+
+		$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
+		$this->assertTrue($post->title === $post_data['title']);
+		$this->assertTrue($post->content === $post_data['content']);
+		$this->assertTrue($post->author_name === $post_data['author_name']);
+	}
+
+	public function testUpdateSaves()
+	{
+		$post_data = array(
+			'title' => 'The Title Has Been Updated'
+		);
+
+		$post = $this->repo->update(1, $post_data);
+
+		$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
+		$this->assertTrue($post->title === $post_data['title']);
+	}
+
+	public function testDestroySaves()
+	{
+		$reply = $this->repo->destroy(1);
+		$this->assertTrue($reply);
+
+		try {
+			$this->repo->findById(1);
+		}
+		catch(NotFoundException $expected)
+		{
+			return;
+		}
+
+		$this->fail('NotFoundException was not raised');
+	}
+
+	public function testInstanceReturnsModel()
+	{
+		$post = $this->repo->instance();
+		$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
+	}
+
+	public function testInstanceReturnsModelWithData()
+	{
+		$post_data = array(
+			'title' => 'Un-validated title'
+		);
+
+		$post = $this->repo->instance($post_data);
+		$this->assertTrue($post instanceof Illuminate\Database\Eloquent\Model);
+		$this->assertTrue($post->title === $post_data['title']);
+	}
+
+}
+```
 
 
 
@@ -1303,209 +1309,213 @@ Now that we have a general overview of what I consider to be a very functional a
 
 If you take a read through the controller tests, you will see that all we really care about is how the controller is interacting with the repository.  So let's see how light that makes our controllers.
 
-app/controllers/V1/PostsController.php
+**app/controllers/V1/PostsController.php**
 
-	<?php
-	namespace V1;
+```php
+<?php
+namespace V1;
 
-	use BaseController;
-	use PostRepositoryInterface;
-	use Input;
-	use View;
+use BaseController;
+use PostRepositoryInterface;
+use Input;
+use View;
 
-	class PostsController extends BaseController {
+class PostsController extends BaseController {
 
-		/**
-		 * We will use Laravel's dependency injection to auto-magically
-		 * "inject" our repository instance into our controller
-		 */
-		public function __construct(PostRepositoryInterface $posts)
-		{
-			$this->posts = $posts;
-		}
-
-		/**
-		 * Display a listing of the resource.
-		 *
-		 * @return Response
-		 */
-		public function index()
-		{
-			return $this->posts->findAll();
-		}
-
-		/**
-		 * Show the form for creating a new resource.
-		 *
-		 * @return Response
-		 */
-		public function create()
-		{
-			$post = $this->posts->instance();
-			return View::make('posts._form', compact('post'));
-		}
-
-		/**
-		 * Store a newly created resource in storage.
-		 *
-		 * @return Response
-		 */
-		public function store()
-		{
-			return $this->posts->store( Input::all() );
-		}
-
-		/**
-		 * Display the specified resource.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function show($id)
-		{
-			return $this->posts->findById($id);
-		}
-
-		/**
-		 * Show the form for editing the specified resource.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function edit($id)
-		{
-			$post = $this->posts->findById($id);
-			return View::make('posts._form', compact('post'));
-		}
-
-		/**
-		 * Update the specified resource in storage.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function update($id)
-		{
-			return $this->posts->update($id, Input::all());
-		}
-
-		/**
-		 * Remove the specified resource from storage.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function destroy($id)
-		{
-			$this->posts->destroy($id);
-			return '';
-		}
-
+	/**
+	 * We will use Laravel's dependency injection to auto-magically
+	 * "inject" our repository instance into our controller
+	 */
+	public function __construct(PostRepositoryInterface $posts)
+	{
+		$this->posts = $posts;
 	}
 
-app/controllers/PostsCommentsController.php
-
-	<?php
-	namespace V1;
-
-	use BaseController;
-	use CommentRepositoryInterface;
-	use Input;
-	use View;
-
-	class PostsCommentsController extends BaseController {
-
-		/**
-		 * We will use Laravel's dependency injection to auto-magically
-		 * "inject" our repository instance into our controller
-		 */
-		public function __construct(CommentRepositoryInterface $comments)
-		{
-			$this->comments = $comments;
-		}
-
-		/**
-		 * Display a listing of the resource.
-		 *
-		 * @return Response
-		 */
-		public function index($post_id)
-		{
-			return $this->comments->findAll($post_id);
-		}
-
-		/**
-		 * Show the form for creating a new resource.
-		 *
-		 * @return Response
-		 */
-		public function create($post_id)
-		{
-			$comment = $this->comments->instance(array(
-				'post_id' => $post_id
-			));
-
-			return View::make('comments._form', compact('comment'));
-		}
-
-		/**
-		 * Store a newly created resource in storage.
-		 *
-		 * @return Response
-		 */
-		public function store($post_id)
-		{
-			return $this->comments->store( $post_id, Input::all() );
-		}
-
-		/**
-		 * Display the specified resource.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function show($post_id, $id)
-		{
-			return $this->comments->findById($post_id, $id);
-		}
-
-		/**
-		 * Show the form for editing the specified resource.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function edit($post_id, $id)
-		{
-			$comment = $this->comments->findById($post_id, $id);
-
-			return View::make('comments._form', compact('comment'));
-		}
-
-		/**
-		 * Update the specified resource in storage.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function update($post_id, $id)
-		{
-			return $this->comments->update($post_id, $id, Input::all());
-		}
-
-		/**
-		 * Remove the specified resource from storage.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function destroy($post_id, $id)
-		{
-			$this->comments->destroy($post_id, $id);
-			return '';
-		}
-
+	/**
+	 * Display a listing of the resource.
+	 *
+	 * @return Response
+	 */
+	public function index()
+	{
+		return $this->posts->findAll();
 	}
+
+	/**
+	 * Show the form for creating a new resource.
+	 *
+	 * @return Response
+	 */
+	public function create()
+	{
+		$post = $this->posts->instance();
+		return View::make('posts._form', compact('post'));
+	}
+
+	/**
+	 * Store a newly created resource in storage.
+	 *
+	 * @return Response
+	 */
+	public function store()
+	{
+		return $this->posts->store( Input::all() );
+	}
+
+	/**
+	 * Display the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function show($id)
+	{
+		return $this->posts->findById($id);
+	}
+
+	/**
+	 * Show the form for editing the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function edit($id)
+	{
+		$post = $this->posts->findById($id);
+		return View::make('posts._form', compact('post'));
+	}
+
+	/**
+	 * Update the specified resource in storage.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function update($id)
+	{
+		return $this->posts->update($id, Input::all());
+	}
+
+	/**
+	 * Remove the specified resource from storage.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function destroy($id)
+	{
+		$this->posts->destroy($id);
+		return '';
+	}
+
+}
+```
+
+**app/controllers/PostsCommentsController.php**
+
+```php
+<?php
+namespace V1;
+
+use BaseController;
+use CommentRepositoryInterface;
+use Input;
+use View;
+
+class PostsCommentsController extends BaseController {
+
+	/**
+	 * We will use Laravel's dependency injection to auto-magically
+	 * "inject" our repository instance into our controller
+	 */
+	public function __construct(CommentRepositoryInterface $comments)
+	{
+		$this->comments = $comments;
+	}
+
+	/**
+	 * Display a listing of the resource.
+	 *
+	 * @return Response
+	 */
+	public function index($post_id)
+	{
+		return $this->comments->findAll($post_id);
+	}
+
+	/**
+	 * Show the form for creating a new resource.
+	 *
+	 * @return Response
+	 */
+	public function create($post_id)
+	{
+		$comment = $this->comments->instance(array(
+			'post_id' => $post_id
+		));
+
+		return View::make('comments._form', compact('comment'));
+	}
+
+	/**
+	 * Store a newly created resource in storage.
+	 *
+	 * @return Response
+	 */
+	public function store($post_id)
+	{
+		return $this->comments->store( $post_id, Input::all() );
+	}
+
+	/**
+	 * Display the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function show($post_id, $id)
+	{
+		return $this->comments->findById($post_id, $id);
+	}
+
+	/**
+	 * Show the form for editing the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function edit($post_id, $id)
+	{
+		$comment = $this->comments->findById($post_id, $id);
+
+		return View::make('comments._form', compact('comment'));
+	}
+
+	/**
+	 * Update the specified resource in storage.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function update($post_id, $id)
+	{
+		return $this->comments->update($post_id, $id, Input::all());
+	}
+
+	/**
+	 * Remove the specified resource from storage.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function destroy($post_id, $id)
+	{
+		$this->comments->destroy($post_id, $id);
+		return '';
+	}
+
+}
+```
 
 It does not get much simpler than that, all it is doing is handing the input data to the repository, taking the response from that, and handing it to the view.
 
@@ -1524,169 +1534,178 @@ Now if you were to ever change your repository to instead use a different ORM th
 
 PostRepositoryInterface and CommentRepositoryInterface must actually exist, and the bindings must actually implement that interface.  So let's create them now:
 
-app/repositories/PostRepositoryInterface.php
+**app/repositories/PostRepositoryInterface.php**
 
-	<?php
+```php
+<?php
 
-	interface PostRepositoryInterface {
-		public function findById($id);
-		public function findAll();
-		public function paginate();
-		public function store($data);
-		public function update($id, $data);
-		public function destroy($id);
-		public function validate($data);
-		public function instance();
-	}
+interface PostRepositoryInterface {
+	public function findById($id);
+	public function findAll();
+	public function paginate();
+	public function store($data);
+	public function update($id, $data);
+	public function destroy($id);
+	public function validate($data);
+	public function instance();
+}
+```
 
-app/repositories/CommentRepositoryInterface.php
+**app/repositories/CommentRepositoryInterface.php**
 
-	<?php
+```php
+<?php
 
-	interface CommentRepositoryInterface {
-		public function findById($post_id, $id);
-		public function findAll($post_id);
-		public function store($post_id, $data);
-		public function update($post_id, $id, $data);
-		public function destroy($post_id, $id);
-		public function validate($data);
-		public function instance();
-	}
-
+interface CommentRepositoryInterface {
+	public function findById($post_id, $id);
+	public function findAll($post_id);
+	public function store($post_id, $data);
+	public function update($post_id, $id, $data);
+	public function destroy($post_id, $id);
+	public function validate($data);
+	public function instance();
+}
+```
 
 Now that we have our 2 interfaces built, our implementations contain each of these methods.  Let's build those now.
 
-app/repositories/EloquentPostRepository.php
+**app/repositories/EloquentPostRepository.php**
 
-	<?php
+```php
+<?php
 
-	class EloquentPostRepository implements PostRepositoryInterface {
+class EloquentPostRepository implements PostRepositoryInterface {
 
-		public function findById($id)
-		{
-			$post = Post::with(array(
-					'comments' => function($q)
-					{
-						$q->orderBy('created_at', 'desc');
-					}
-				))
-				->where('id', $id)
-				->first();
+	public function findById($id)
+	{
+		$post = Post::with(array(
+				'comments' => function($q)
+				{
+					$q->orderBy('created_at', 'desc');
+				}
+			))
+			->where('id', $id)
+			->first();
 
-			if(!$post) throw new NotFoundException('Post Not Found');
-			return $post;
-		}
-
-		public function findAll()
-		{
-			return Post::with(array(
-					'comments' => function($q)
-					{
-						$q->orderBy('created_at', 'desc');
-					}
-				))
-				->orderBy('created_at', 'desc')
-				->get();
-		}
-
-		public function paginate($limit = null)
-		{
-			return Post::paginate($limit);
-		}
-
-		public function store($data)
-		{
-			$this->validate($data);
-			return Post::create($data);
-		}
-
-		public function update($id, $data)
-		{
-			$post = $this->findById($id);
-			$post->fill($data);
-			$this->validate($post->toArray());
-			$post->save();
-			return $post;
-		}
-
-		public function destroy($id)
-		{
-			$post = $this->findById($id);
-			$post->delete();
-			return true;
-		}
-
-		public function validate($data)
-		{
-			$validator = Validator::make($data, Post::$rules);
-			if($validator->fails()) throw new ValidationException($validator);
-			return true;
-		}
-
-		public function instance($data = array())
-		{
-			return new Post($data);
-		}
-
+		if(!$post) throw new NotFoundException('Post Not Found');
+		return $post;
 	}
-	
 
-app/repositories/EloquentCommentRepository.php
-
-	<?php
-
-	class EloquentCommentRepository implements CommentRepositoryInterface {
-
-		public function findById($post_id, $id)
-		{
-			$comment = Comment::find($id);
-			if(!$comment || $comment->post_id != $post_id) throw new NotFoundException('Comment Not Found');
-			return $comment;
-		}
-
-		public function findAll($post_id)
-		{
-			return Comment::where('post_id', $post_id)
-				->orderBy('created_at', 'desc')
-				->get();
-		}
-
-		public function store($post_id, $data)
-		{
-			$data['post_id'] = $post_id;
-			$this->validate($data);
-			return Comment::create($data);
-		}
-
-		public function update($post_id, $id, $data)
-		{
-			$comment = $this->findById($post_id, $id);
-			$comment->fill($data);
-			$this->validate($comment->toArray());
-			$comment->save();
-			return $comment;
-		}
-
-		public function destroy($post_id, $id)
-		{
-			$comment = $this->findById($post_id, $id);
-			$comment->delete();
-			return true;
-		}
-
-		public function validate($data)
-		{
-			$validator = Validator::make($data, Comment::$rules);
-			if($validator->fails()) throw new ValidationException($validator);
-			return true;
-		}
-
-		public function instance($data = array())
-		{
-			return new Comment($data);
-		}
-
+	public function findAll()
+	{
+		return Post::with(array(
+				'comments' => function($q)
+				{
+					$q->orderBy('created_at', 'desc');
+				}
+			))
+			->orderBy('created_at', 'desc')
+			->get();
 	}
+
+	public function paginate($limit = null)
+	{
+		return Post::paginate($limit);
+	}
+
+	public function store($data)
+	{
+		$this->validate($data);
+		return Post::create($data);
+	}
+
+	public function update($id, $data)
+	{
+		$post = $this->findById($id);
+		$post->fill($data);
+		$this->validate($post->toArray());
+		$post->save();
+		return $post;
+	}
+
+	public function destroy($id)
+	{
+		$post = $this->findById($id);
+		$post->delete();
+		return true;
+	}
+
+	public function validate($data)
+	{
+		$validator = Validator::make($data, Post::$rules);
+		if($validator->fails()) throw new ValidationException($validator);
+		return true;
+	}
+
+	public function instance($data = array())
+	{
+		return new Post($data);
+	}
+
+}
+```
+
+
+**app/repositories/EloquentCommentRepository.php**
+
+
+```php
+<?php
+
+class EloquentCommentRepository implements CommentRepositoryInterface {
+
+	public function findById($post_id, $id)
+	{
+		$comment = Comment::find($id);
+		if(!$comment || $comment->post_id != $post_id) throw new NotFoundException('Comment Not Found');
+		return $comment;
+	}
+
+	public function findAll($post_id)
+	{
+		return Comment::where('post_id', $post_id)
+			->orderBy('created_at', 'desc')
+			->get();
+	}
+
+	public function store($post_id, $data)
+	{
+		$data['post_id'] = $post_id;
+		$this->validate($data);
+		return Comment::create($data);
+	}
+
+	public function update($post_id, $id, $data)
+	{
+		$comment = $this->findById($post_id, $id);
+		$comment->fill($data);
+		$this->validate($comment->toArray());
+		$comment->save();
+		return $comment;
+	}
+
+	public function destroy($post_id, $id)
+	{
+		$comment = $this->findById($post_id, $id);
+		$comment->delete();
+		return true;
+	}
+
+	public function validate($data)
+	{
+		$validator = Validator::make($data, Comment::$rules);
+		if($validator->fails()) throw new ValidationException($validator);
+		return true;
+	}
+
+	public function instance($data = array())
+	{
+		return new Comment($data);
+	}
+
+}
+```
+
 
 If you take a look in our repositories, there are a few Exceptions that we are throwing, which are not native, nor do they belong to Laravel.  Those are custom Exceptions that we are using to simplify our code.  By using custom Exceptions, we are able to easily halt the progress of the application if certain conditions are met.  For instance if a post is not found, we can just toss a NotFoundException, and the application will handle it accordingly, but not by showing a 500 error as usual, instead we are going to setup custom error handlers.
 
@@ -1694,141 +1713,154 @@ First let's define the custom Exceptions.  Create a file in your `app` folder ca
 
 	touch app/errors.php
 
-app/errors.php
 
-	<?php
 
-	class PermissionException extends Exception {
-		
-		public function __construct($message = null, $code = 403)
-		{
-			parent::__construct($message ?: 'Action not allowed', $code);
-		}
+**app/errors.php**
 
+```php
+<?php
+
+class PermissionException extends Exception {
+	
+	public function __construct($message = null, $code = 403)
+	{
+		parent::__construct($message ?: 'Action not allowed', $code);
 	}
 
-	class ValidationException extends Exception {
+}
 
-		protected $messages;
+class ValidationException extends Exception {
 
-		public function __construct($validator)
-		{
-			$this->messages = $validator->messages();
-			parent::__construct($this->messages, 400);
-		}
+	protected $messages;
 
-		public function getMessages()
-		{
-			return $this->messages;
-		}
-
+	public function __construct($validator)
+	{
+		$this->messages = $validator->messages();
+		parent::__construct($this->messages, 400);
 	}
 
-	class NotFoundException extends Exception {
-
-		public function __construct($message = null, $code = 404)
-		{
-			parent::__construct($message ?: 'Resource Not Found', $code);
-		}
-
+	public function getMessages()
+	{
+		return $this->messages;
 	}
+
+}
+
+class NotFoundException extends Exception {
+
+	public function __construct($message = null, $code = 404)
+	{
+		parent::__construct($message ?: 'Resource Not Found', $code);
+	}
+
+}
+```
+
+
 
 Very simple Exceptions, notice for the ValidationException, we can just pass it the failed validator instance, and it will handle the error messages accordingly!
 
 Now we need to define our error handlers, that will be called when one of these Exceptions are thrown.
 
-app/filters.php
+**app/filters.php**
 
-	...
+```php
+...
 
-	/**
-	 * General HttpException handler
-	 */
-	App::error( function(Symfony\Component\HttpKernel\Exception\HttpException $e, $code)
+/**
+ * General HttpException handler
+ */
+App::error( function(Symfony\Component\HttpKernel\Exception\HttpException $e, $code)
+{
+	$headers = $e->getHeaders();
+
+	switch($code)
 	{
-		$headers = $e->getHeaders();
+		case 401:
+			$default_message = 'Invalid API key';
+			$headers['WWW-Authenticate'] = 'Basic realm="CRM REST API"';
+		break;
 
-		switch($code)
-		{
-			case 401:
-				$default_message = 'Invalid API key';
-				$headers['WWW-Authenticate'] = 'Basic realm="CRM REST API"';
-			break;
+		case 403:
+			$default_message = 'Insufficient privileges to perform this action';
+		break;
 
-			case 403:
-				$default_message = 'Insufficient privileges to perform this action';
-			break;
+		case 404:
+			$default_message = 'The requested resource was not found';
+		break;
 
-			case 404:
-				$default_message = 'The requested resource was not found';
-			break;
+		default:
+			$default_message = 'An error was encountered';
+	}
 
-			default:
-				$default_message = 'An error was encountered';
-		}
+	return Response::json(array(
+		'error' => $e->getMessage() ?: $default_message
+	), $code, $headers);
+});
 
-		return Response::json(array(
-			'error' => $e->getMessage() ?: $default_message
-		), $code, $headers);
-	});
+/**
+ * Permission Exception Handler
+ */
+App::error(function(PermissionException $e, $code)
+{
+	return Response::json($e->getMessage(), $e->getCode());
+});
 
-	/**
-	 * Permission Exception Handler
-	 */
-	App::error(function(PermissionException $e, $code)
-	{
-		return Response::json($e->getMessage(), $e->getCode());
-	});
+/**
+ * Validation Exception Handler
+ */
+App::error(function(ValidationException $e, $code)
+{
+	return Response::json($e->getMessages(), $code);
+});
 
-	/**
-	 * Validation Exception Handler
-	 */
-	App::error(function(ValidationException $e, $code)
-	{
-		return Response::json($e->getMessages(), $code);
-	});
+/**
+ * Not Found Exception Handler
+ */
+App::error(function(NotFoundException $e)
+{
+	return Response::json($e->getMessage(), $e->getCode());
+});
+```
 
-	/**
-	 * Not Found Exception Handler
-	 */
-	App::error(function(NotFoundException $e)
-	{
-		return Response::json($e->getMessage(), $e->getCode());
-	});
 
 
 We must now let our auto-loader know about these new files.  So we must tell Composer where to check for them:
 
-composer.json
 
-	{
-	    "require": {
-	        "laravel/framework": "4.0.*",
-	        "way/generators": "dev-master",
-	        "twitter/bootstrap": "dev-master",
-	        "conarwelsh/mustache-l4": "dev-master"
-	    },
-	    "require-dev": {
-	        "phpunit/phpunit": "3.7.*",
-	        "mockery/mockery": "0.7.*"
-	    },
-	    "autoload": {
-	        "classmap": [
-	            "app/commands",
-	            "app/controllers",
-	            "app/models",
-	            "app/database/migrations",
-	            "app/database/seeds",
-	            "app/tests/TestCase.php",
-	            "app/repositories",
-	            "app/errors.php"
-	        ]
-	    },
-	    "scripts": {
-	        "post-update-cmd": "php artisan optimize"
-	    },
-	    "minimum-stability": "dev"
-	}
+**composer.json**
+
+```json
+{
+    "require": {
+        "laravel/framework": "4.0.*",
+        "way/generators": "dev-master",
+        "twitter/bootstrap": "dev-master",
+        "conarwelsh/mustache-l4": "dev-master"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*",
+        "mockery/mockery": "0.7.*"
+    },
+    "autoload": {
+        "classmap": [
+            "app/commands",
+            "app/controllers",
+            "app/models",
+            "app/database/migrations",
+            "app/database/seeds",
+            "app/tests/TestCase.php",
+            "app/repositories",
+            "app/errors.php"
+        ]
+    },
+    "scripts": {
+        "post-update-cmd": "php artisan optimize"
+    },
+    "minimum-stability": "dev"
+}
+```
+
 
 We must now tell Composer to actually check for these files, and include them in the auto-load registry.
 
@@ -1836,185 +1868,201 @@ We must now tell Composer to actually check for these files, and include them in
 
 Great, so we have completed our controllers and our repositories, the last 2 items in our MVRC that we have to take care of are our models and views, both of which are pretty straight forward.
 
-app/models/Post.php
+**app/models/Post.php**
 
-	<?php
+```php
+<?php
 
-	class Post extends Eloquent {
+class Post extends Eloquent {
 
-	    protected $fillable = array(
-	    	'title', 'content', 'author_name'
-	    );
+    protected $fillable = array(
+    	'title', 'content', 'author_name'
+    );
 
-	    public static $rules = array(
-	    	'title'       => 'required',
-			'author_name' => 'required'
-	    );
+    public static $rules = array(
+    	'title'       => 'required',
+		'author_name' => 'required'
+    );
 
-	    public function comments()
-		{
-			return $this->hasMany('Comment');
-		}
-
+    public function comments()
+	{
+		return $this->hasMany('Comment');
 	}
 
-app/models/Comment.php
+}
+```
 
-	<?php
+**app/models/Comment.php**
 
-	class Comment extends Eloquent {
+```php
+<?php
 
-		protected $fillable = array(
-			'post_id', 'content', 'author_name'
-		);
+class Comment extends Eloquent {
 
-		public static $rules = array(
-			'post_id'     => 'required|numeric',
-			'content'     => 'required',
-			'author_name' => 'required'
-		);
+	protected $fillable = array(
+		'post_id', 'content', 'author_name'
+	);
 
-		public function post()
-		{
-			return $this->belongsTo('Post');
-		}
+	public static $rules = array(
+		'post_id'     => 'required|numeric',
+		'content'     => 'required',
+		'author_name' => 'required'
+	);
 
+	public function post()
+	{
+		return $this->belongsTo('Post');
 	}
 
+}
+```
 
 As far as views are concerned, I am just going to mark up some simple bootstrap-friendly pages.  Remember to change each files extension to `.mustache` though, since our generator thought that we would be using `.blade.php`.  We are also going to create a few "partial" views, using the Rails convention of prefixing them with an `_` to signify a partial.
 
 > Note: I skipped a few views, as we will not be using them in this tutorial.
 
-public/views/posts/index.mustache
+**public/views/posts/index.mustache**
 
-	{{#posts}}
-		{{> posts._post}}
-	{{/posts}}
+```
+{{#posts}}
+	{{> posts._post}}
+{{/posts}}
+```
 
-public/views/posts/show.mustache
+**public/views/posts/show.mustache**
 
-	<article>
-		<h3>
-			{{ post.title }} {{ post.id }}
-			<small>{{ post.author_name }}</small>
-		</h3>
-		<div>
-			{{ post.content }}
+```html
+<article>
+	<h3>
+		{{ post.title }} {{ post.id }}
+		<small>{{ post.author_name }}</small>
+	</h3>
+	<div>
+		{{ post.content }}
+	</div>
+</article>
+
+<div>
+	<h2>Add A Comment</h2>
+	{{> comments._form }}
+
+	<section data-role="comments">
+		{{#post.comments}}
+			<div>
+				{{> comments._comment }}
+			</div>
+		{{/post.comments}}
+	</section>
+</div>
+```
+
+**public/views/posts/_post.mustache**
+
+```html
+<article data-toggle="view" data-target="posts/{{ id }}">
+	<h3>{{ title }} {{ id }}</h3>
+	<cite>{{ author_name }} on {{ created_at }}</cite>
+</article>
+```
+
+**public/views/posts/_form.mustache**
+
+```html
+{{#exists}}
+	<form action="/v1/posts/{{ post.id }}" method="post">
+		<input type="hidden" name="_method" value="PUT" />
+{{/exists}}
+{{^exists}}
+	<form action="/v1/posts" method="post">
+{{/exists}}
+	
+	<fieldset>
+
+		<div class="control-group">
+			<label class="control-label"></label>
+			<div class="controls">
+				<input type="text" name="title" value="{{ post.title }}" />
+			</div>
 		</div>
-	</article>
 
-	<div>
-		<h2>Add A Comment</h2>
-		{{> comments._form }}
-
-		<section data-role="comments">
-			{{#post.comments}}
-				<div>
-					{{> comments._comment }}
-				</div>
-			{{/post.comments}}
-		</section>
-	</div>
-
-public/views/posts/_post.mustache
-
-	<article data-toggle="view" data-target="posts/{{ id }}">
-		<h3>{{ title }} {{ id }}</h3>
-		<cite>{{ author_name }} on {{ created_at }}</cite>
-	</article>
-
-public/views/posts/_form.mustache
-
-	{{#exists}}
-		<form action="/v1/posts/{{ post.id }}" method="post">
-			<input type="hidden" name="_method" value="PUT" />
-	{{/exists}}
-	{{^exists}}
-		<form action="/v1/posts" method="post">
-	{{/exists}}
-		
-		<fieldset>
-
-			<div class="control-group">
-				<label class="control-label"></label>
-				<div class="controls">
-					<input type="text" name="title" value="{{ post.title }}" />
-				</div>
+		<div class="control-group">
+			<label class="control-label"></label>
+			<div class="controls">
+				<input type="text" name="author_name" value="{{ post.author_name }}" />
 			</div>
+		</div>
 
-			<div class="control-group">
-				<label class="control-label"></label>
-				<div class="controls">
-					<input type="text" name="author_name" value="{{ post.author_name }}" />
-				</div>
+		<div class="control-group">
+			<label class="control-label"></label>
+			<div class="controls">
+				<textarea name="content">{{ post.content }}"</textarea>
 			</div>
+		</div>
 
-			<div class="control-group">
-				<label class="control-label"></label>
-				<div class="controls">
-					<textarea name="content">{{ post.content }}"</textarea>
-				</div>
+		<div class="form-actions">
+			<input type="submit" class="btn btn-primary" value="Save" />
+		</div>
+
+	</fieldset>
+</form>
+```
+
+**public/views/comments/_comment.mustache**
+
+```html
+<h5>
+	{{ author_name }}
+	<small>{{ created_at }}</small>
+</h5>
+<div>
+	{{ content }}
+</div>
+```
+
+**public/views/comments/_form.mustache**
+
+```html
+{{#exists}}
+	<form class="form-horizontal" action="/v1/posts/{{ comment.post_id }}/{{ id }}" method="post">
+		<input type="hidden" name="_method" value="PUT" />
+{{/exists}}
+{{^exists}}
+	<form class="form-horizontal" action="/v1/posts/{{ comment.post_id }}" method="post">
+{{/exists}}
+	
+	<fieldset>
+
+		<div class="control-group">
+			<label class="control-label">Author Name</label>
+			<div class="controls">
+				<input type="text" name="author_name" value="{{ comment.author_name }}" />
 			</div>
+		</div>
 
-			<div class="form-actions">
-				<input type="submit" class="btn btn-primary" value="Save" />
+		<div class="control-group">
+			<label class="control-label">Comment</label>
+			<div class="controls">
+				<textarea name="content">{{ comment.content }}</textarea>
 			</div>
+		</div>
 
-		</fieldset>
-	</form>
+		<div class="form-actions">
+			<input type="submit" class="btn btn-primary" value="Save" />
+		</div>
 
-public/views/comments/_comment.mustache
-
-	<h5>
-		{{ author_name }}
-		<small>{{ created_at }}</small>
-	</h5>
-	<div>
-		{{ content }}
-	</div>
-
-public/views/comments/_form.mustache
-
-	{{#exists}}
-		<form class="form-horizontal" action="/v1/posts/{{ comment.post_id }}/{{ id }}" method="post">
-			<input type="hidden" name="_method" value="PUT" />
-	{{/exists}}
-	{{^exists}}
-		<form class="form-horizontal" action="/v1/posts/{{ comment.post_id }}" method="post">
-	{{/exists}}
-		
-		<fieldset>
-
-			<div class="control-group">
-				<label class="control-label">Author Name</label>
-				<div class="controls">
-					<input type="text" name="author_name" value="{{ comment.author_name }}" />
-				</div>
-			</div>
-
-			<div class="control-group">
-				<label class="control-label">Comment</label>
-				<div class="controls">
-					<textarea name="content">{{ comment.content }}</textarea>
-				</div>
-			</div>
-
-			<div class="form-actions">
-				<input type="submit" class="btn btn-primary" value="Save" />
-			</div>
-
-		</fieldset>
-	</form>
+	</fieldset>
+</form>
+```
 
 We also will need a notifications view
 
-public/views/layouts/_notification.mustache
+**public/views/layouts/_notification.mustache**
 
-	<div class="alert alert-{{type}}">
-		{{message}}
-	</div>
-
+```html
+<div class="alert alert-{{type}}">
+	{{message}}
+</div>
+```
 
 
 
@@ -2027,90 +2075,96 @@ Your first run of this test should pass with flying (green) colors.  However, if
 
 open up `app/tests/TestCase.php` and add the following 2 methods
 
-	public function setUp()
-	{
-		parent::setUp();
-		$this->seed();
-	}
+```php
+public function setUp()
+{
+	parent::setUp();
+	$this->seed();
+}
 
-	public function tearDown()
-	{
-		Mockery::close();
-	}
+public function tearDown()
+{
+	Mockery::close();
+}
+```
 
 This is great, we now said that at every "tear down", which is run after each test completes, to re-seed the database.  However we still have one problem, everytime you re-seed, it is only going to append new rows to the tables, our tests are looking for items with a row ID of 1, so we still have a few changes to make.  We just need to tell the database to truncate our tables when seeding:
 
-app/database/seeds/CommentsTableSeeder.php
+**app/database/seeds/CommentsTableSeeder.php**
 
-	<?php
+```php
+<?php
 
-	class CommentsTableSeeder extends Seeder {
+class CommentsTableSeeder extends Seeder {
 
-		public function run()
-	    {
-	        $comments = array(
-	            array(
-	                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
-	                'author_name' => 'Testy McTesterson',
-	                'post_id'     => 1,
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	            array(
-	                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
-	                'author_name' => 'Testy McTesterson',
-	                'post_id'     => 1,
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	            array(
-	                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
-	                'author_name' => 'Testy McTesterson',
-	                'post_id'     => 2,
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	        );
+	public function run()
+    {
+        $comments = array(
+            array(
+                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
+                'author_name' => 'Testy McTesterson',
+                'post_id'     => 1,
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+            array(
+                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
+                'author_name' => 'Testy McTesterson',
+                'post_id'     => 1,
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+            array(
+                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
+                'author_name' => 'Testy McTesterson',
+                'post_id'     => 2,
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+        );
 
-	        //truncate the comments table when we seed
-	        DB::table('comments')->truncate();
-	        DB::table('comments')->insert($comments);
-	    }
+        //truncate the comments table when we seed
+        DB::table('comments')->truncate();
+        DB::table('comments')->insert($comments);
+    }
 
-	}
+}
+```
 
 
-app/database/seeds/PostsTableSeeder.php
+**app/database/seeds/PostsTableSeeder.php**
 
-	<?php
+```php
+<?php
 
-	class PostsTableSeeder extends Seeder {
+class PostsTableSeeder extends Seeder {
 
-		public function run()
-	    {
-	        $posts = array(
-	            array(
-	                'title'       => 'Test Post',
-	                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
-	                'author_name' => 'Conar Welsh',
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	            array(
-	                'title'       => 'Another Test Post',
-	                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
-	                'author_name' => 'Conar Welsh',
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            )
-	        );
+	public function run()
+    {
+        $posts = array(
+            array(
+                'title'       => 'Test Post',
+                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
+                'author_name' => 'Conar Welsh',
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+            array(
+                'title'       => 'Another Test Post',
+                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
+                'author_name' => 'Conar Welsh',
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            )
+        );
 
-	        //truncate the posts table each time we seed
-	        DB::table('posts')->truncate();
-	        DB::table('posts')->insert($posts);
-	    }
+        //truncate the posts table each time we seed
+        DB::table('posts')->truncate();
+        DB::table('posts')->insert($posts);
+    }
 
-	}
+}
+```
 
 	
 Now you should be able to run the tests any number of times, and get passing tests each time!  That means we have fulfilled our TDD cycle and we are not allowed to write anymore production code for our API!!  Let's just commit our changes to our repo and move onto the Backbone application!
@@ -2160,37 +2214,41 @@ There are 2 main approaches we can take here:
 
 Remember I told you when you were adding the resource routes that it was important that you placed them ABOVE the app route?? The catch-all method is the reason for that statement. The overall goal of this method is to have any routes that have not found a match in Laravel be caught and sent to Backbone. To implement this method is easy:
 
-app/routes.php
+**app/routes.php**
 
-	// change your existing app route to this:
-	// we are basically just giving it an optional parameter of "anything"
-	Route::get('/{path?}', function($path = null)
-	{
-	    return View::make('app');
-	})
-	->where('path', '.*'); //regex to match anything (dots, slashes, letters, numbers, etc)
+```php
+// change your existing app route to this:
+// we are basically just giving it an optional parameter of "anything"
+Route::get('/{path?}', function($path = null)
+{
+    return View::make('app');
+})
+->where('path', '.*'); //regex to match anything (dots, slashes, letters, numbers, etc)
+```
 
 Now, every route other than our API routes will render our app view.
 
 In addition, if you have a multi-page app (several single page apps), you can define several of these catch-alls:
 
-	Route::get('someApp1{path?}', function($path = null)
-	{
-	    return View::make('app');
-	})
-	->where('path', '.*');
+```php
+Route::get('someApp1{path?}', function($path = null)
+{
+    return View::make('app');
+})
+->where('path', '.*');
 
-	Route::get('anotherApp/{path?}', function($path = null)
-	{
-	    return View::make('app');
-	})
-	->where('path', '.*');
+Route::get('anotherApp/{path?}', function($path = null)
+{
+    return View::make('app');
+})
+->where('path', '.*');
 
-	Route::get('athirdapp{path?}', function($path = null)
-	{
-	    return View::make('app');
-	})
-	->where('path', '.*');
+Route::get('athirdapp{path?}', function($path = null)
+{
+    return View::make('app');
+})
+->where('path', '.*');
+```
 
 > Note: Note: keep in mind the '/' before {path?}. If that slash is there, it will be required in the URL (with the exception of the index route), sometimes this is desired and sometimes not.
 
@@ -2208,55 +2266,57 @@ The routes that we are going to end up defining for the app are simply:
 
 app/routes.php
 
-	<?php
+```php
+<?php
 
-	App::bind('PostRepositoryInterface', 'EloquentPostRepository');
-	App::bind('CommentRepositoryInterface', 'EloquentCommentRepository');
-
-
-
-
-
-	//create a group of routes that will belong to APIv1
-	Route::group(array('prefix' => 'v1'), function()
-	{
-	    Route::resource('posts', 'V1\PostsController');
-	    Route::resource('posts.comments', 'V1\PostsCommentsController');
-	});
+App::bind('PostRepositoryInterface', 'EloquentPostRepository');
+App::bind('CommentRepositoryInterface', 'EloquentCommentRepository');
 
 
 
-	/**
-	 * Method #1: use catch-all
-	 */
-	// change your existing app route to this:
-	// we are basically just giving it an optional parameter of "anything"
-	// Route::get('/{path?}', function($path = null)
-	// {
-	//     return View::make('layouts.application')->nest('content', 'app');
-	// })
-	// ->where('path', '.*'); //regex to match anything (dots, slashes, letters, numbers, etc)
+
+
+//create a group of routes that will belong to APIv1
+Route::group(array('prefix' => 'v1'), function()
+{
+    Route::resource('posts', 'V1\PostsController');
+    Route::resource('posts.comments', 'V1\PostsCommentsController');
+});
 
 
 
-	/**
-	 * Method #2: define each route
-	 */
-	Route::get('/', function()
-	{
-	    $posts = App::make('PostRepositoryInterface')->paginate();
-	    return View::make('layouts.application')->nest('content', 'posts.index', array(
-			'posts' => $posts
-		));
-	});
+/**
+ * Method #1: use catch-all
+ */
+// change your existing app route to this:
+// we are basically just giving it an optional parameter of "anything"
+// Route::get('/{path?}', function($path = null)
+// {
+//     return View::make('layouts.application')->nest('content', 'app');
+// })
+// ->where('path', '.*'); //regex to match anything (dots, slashes, letters, numbers, etc)
 
-	Route::get('posts/{id}', function($id)
-	{
-	    $post = App::make('PostRepositoryInterface')->findById($id);
-	    return View::make('layouts.application')->nest('content', 'posts.show', array(
-			'post' => $post
-		));
-	});
+
+
+/**
+ * Method #2: define each route
+ */
+Route::get('/', function()
+{
+    $posts = App::make('PostRepositoryInterface')->paginate();
+    return View::make('layouts.application')->nest('content', 'posts.index', array(
+		'posts' => $posts
+	));
+});
+
+Route::get('posts/{id}', function($id)
+{
+    $post = App::make('PostRepositoryInterface')->findById($id);
+    return View::make('layouts.application')->nest('content', 'posts.show', array(
+		'post' => $post
+	));
+});
+```
 
 
 Pretty cool huh?! Regardless of which method, or the combination, your Backbone router will end up the same.
@@ -2273,398 +2333,411 @@ Keep in mind a few things while choosing which method to use, if you use the cat
 
 One view to rule them all! This BaseView is the view that all of our other Views will inherit from. For our purposes this view has but one job... templating! In a larger app this view is a good place to put other shared logic.
 
-	/**
-     ***************************************
-     * Array Storage Driver
-     ***************************************
-     */
-    var ArrayStorage = function(){
-        this.storage = {};
-    };
-    ArrayStorage.prototype.get = function(key)
+```js
+/**
+ ***************************************
+ * Array Storage Driver
+ ***************************************
+ */
+var ArrayStorage = function(){
+    this.storage = {};
+};
+ArrayStorage.prototype.get = function(key)
+{
+    return this.storage[key];
+};
+ArrayStorage.prototype.set = function(key, val)
+{
+    return this.storage[key] = val;
+};
+
+
+
+/**
+ ***************************************
+ * Base View
+ ***************************************
+ */
+var BaseView = bb.View.extend({
+    templateDriver: new ArrayStorage,
+    viewPath: '/views/',
+    template: function()
     {
-        return this.storage[key];
-    };
-    ArrayStorage.prototype.set = function(key, val)
-    {
-        return this.storage[key] = val;
-    };
+        var view, data, template, self;
 
-
-
-    /**
-     ***************************************
-     * Base View
-     ***************************************
-     */
-    var BaseView = bb.View.extend({
-        templateDriver: new ArrayStorage,
-        viewPath: '/views/',
-        template: function()
+        switch(arguments.length)
         {
-            var view, data, template, self;
-
-            switch(arguments.length)
-            {
-                case 1:
-                    view = this.view;
-                    data = arguments[0];
-                    break;
-                case 2:
-                    view = arguments[0];
-                    data = arguments[1];
-                    break;
-            }
-
-            template = this.getTemplate(view, false);
-            self = this;
-
-            return template(data, function(partial)
-            {
-                return self.getTemplate(partial, true);
-            });
-        },
-        getTemplate: function(view, isPartial)
-        {
-            return this.templateDriver.get(view) || this.fetch(view, isPartial);
-        },
-        setTemplate: function(name, template)
-        {
-            return this.templateDriver.set(name, template);
-        },
-        fetch: function(view, isPartial)
-        {
-            var markup = $.ajax({
-                async: false,
-                url: this.viewPath + view.split('.').join('/') + '.mustache'
-            }).responseText;
-
-            return isPartial
-                ? markup
-                : this.setTemplate(view, Mustache.compile(markup));
+            case 1:
+                view = this.view;
+                data = arguments[0];
+                break;
+            case 2:
+                view = arguments[0];
+                data = arguments[1];
+                break;
         }
-    });
 
+        template = this.getTemplate(view, false);
+        self = this;
+
+        return template(data, function(partial)
+        {
+            return self.getTemplate(partial, true);
+        });
+    },
+    getTemplate: function(view, isPartial)
+    {
+        return this.templateDriver.get(view) || this.fetch(view, isPartial);
+    },
+    setTemplate: function(name, template)
+    {
+        return this.templateDriver.set(name, template);
+    },
+    fetch: function(view, isPartial)
+    {
+        var markup = $.ajax({
+            async: false,
+            url: this.viewPath + view.split('.').join('/') + '.mustache'
+        }).responseText;
+
+        return isPartial
+            ? markup
+            : this.setTemplate(view, Mustache.compile(markup));
+    }
+});
+```
 
 
 ### PostView
 
 The PostView renders a single blog post
 
-	// this view will show an entire post
-    // comment form, and comments
-    var PostView = BaseView.extend({
-        view: 'posts.show',
-        events: {
-            'submit form': function(e)
-            {
-                e.preventDefault();
-                e.stopPropagation();
-
-                return this.addComment( $(e.target).serialize() );
-            }
-        },
-        render: function()
+```js
+// this view will show an entire post
+// comment form, and comments
+var PostView = BaseView.extend({
+    view: 'posts.show',
+    events: {
+        'submit form': function(e)
         {
-            var self = this;
+            e.preventDefault();
+            e.stopPropagation();
 
-            self.$el.html( this.template({
-                post: this.model.attributes
-            }) );
-        },
-        addComment: function(formData)
-        {
-            var
-                self = this,
-                action = this.model.url() + '/comments'
-            ;
-
-            $.post(action, formData, function(comment, status, xhr)
-            {
-                var view = new CommentViewPartial({
-                    model: new bb.Model(comment)
-                });
-                
-                view.render().$el.prependTo(self.$('[data-role="comments"]'));
-                
-                self.$('input[type="text"], textarea').val('');
-                
-                self.model.attributes.comments.unshift(comment);
-                
-                notifications.add({
-                    type: 'success',
-                    message: 'Comment Added!'
-                });
-            });
-
+            return this.addComment( $(e.target).serialize() );
         }
-    });
+    },
+    render: function()
+    {
+        var self = this;
+
+        self.$el.html( this.template({
+            post: this.model.attributes
+        }) );
+    },
+    addComment: function(formData)
+    {
+        var
+            self = this,
+            action = this.model.url() + '/comments'
+        ;
+
+        $.post(action, formData, function(comment, status, xhr)
+        {
+            var view = new CommentViewPartial({
+                model: new bb.Model(comment)
+            });
+            
+            view.render().$el.prependTo(self.$('[data-role="comments"]'));
+            
+            self.$('input[type="text"], textarea').val('');
+            
+            self.model.attributes.comments.unshift(comment);
+            
+            notifications.add({
+                type: 'success',
+                message: 'Comment Added!'
+            });
+        });
+
+    }
+});
+```
 
 
 
 
 ### Partial Views
 
-	// this will be used for rendering a single
-    // comment
-    var CommentViewPartial = BaseView.extend({
-        view: 'comments._comment',
-        render: function()
-        {
-            this.$el.html( this.template(this.model.attributes) );
-            return this;
-        }
-    });
+```js
+// this will be used for rendering a single
+// comment
+var CommentViewPartial = BaseView.extend({
+    view: 'comments._comment',
+    render: function()
+    {
+        this.$el.html( this.template(this.model.attributes) );
+        return this;
+    }
+});
 
 
-    var PostViewPartial = BaseView.extend({
-        view: 'posts._post',
-        render: function()
-        {
-            this.$el.html( this.template(this.model.attributes) );
-            return this;
-        }
-    });
-
+var PostViewPartial = BaseView.extend({
+    view: 'posts._post',
+    render: function()
+    {
+        this.$el.html( this.template(this.model.attributes) );
+        return this;
+    }
+});
+```
 
 
 
 ### Blog View
 
-	var Blog = BaseView.extend({
-        view: 'posts.index',
-        initialize: function()
-        {
-            this.perPage  = this.options.perPage || 15;
-            this.page     = this.options.page || 0;
-            this.fetching = this.collection.fetch();
+```js
+var Blog = BaseView.extend({
+    view: 'posts.index',
+    initialize: function()
+    {
+        this.perPage  = this.options.perPage || 15;
+        this.page     = this.options.page || 0;
+        this.fetching = this.collection.fetch();
 
-            if(this.options.infiniteScroll) this.enableInfiniteScroll();
-        },
-        render: function()
+        if(this.options.infiniteScroll) this.enableInfiniteScroll();
+    },
+    render: function()
+    {
+        var self = this;
+        this.fetching.done(function()
         {
-            var self = this;
-            this.fetching.done(function()
-            {
-                self.$el.html('');
-                self.addPosts();
+            self.$el.html('');
+            self.addPosts();
 
-                // var posts = this.paginate()
-                
-                // for(var i=0; i<posts.length; i++)
-                // {
-                //     posts[i] = posts[i].toJSON();
-                // }
+            // var posts = this.paginate()
+            
+            // for(var i=0; i<posts.length; i++)
+            // {
+            //     posts[i] = posts[i].toJSON();
+            // }
 
-                // self.$el.html( self.template({
-                //     posts: posts
-                // }) );
-                
-                if(self.options.infiniteScroll) self.enableInfiniteScroll();
-            });
-        },
-        paginate: function()
+            // self.$el.html( self.template({
+            //     posts: posts
+            // }) );
+            
+            if(self.options.infiniteScroll) self.enableInfiniteScroll();
+        });
+    },
+    paginate: function()
+    {
+        var posts;
+        posts = this.collection.rest(this.perPage * this.page);
+        posts = _.first(posts, this.perPage);
+        this.page++;
+
+        return posts;
+    },
+    addPosts: function()
+    {
+        var posts = this.paginate();
+
+        for(var i=0; i<posts.length; i++)
         {
-            var posts;
-            posts = this.collection.rest(this.perPage * this.page);
-            posts = _.first(posts, this.perPage);
-            this.page++;
-
-            return posts;
-        },
-        addPosts: function()
-        {
-            var posts = this.paginate();
-
-            for(var i=0; i<posts.length; i++)
-            {
-                this.addOnePost( posts[i] );
-            }
-        },
-        addOnePost: function(model)
-        {
-            var view = new PostViewPartial({
-                model: model
-            });
-            this.$el.append( view.render().el );
-        },
-        showPost: function(id)
-        {
-            var self = this;
-
-            this.disableInifiniteScroll();
-
-            this.fetching.done(function()
-            {
-                var model = self.collection.get(id);
-
-                if(!self.postView)
-                {
-                    self.postView = new self.options.postView({
-                        el: self.el
-                    });
-                }
-                self.postView.model = model;                   
-                self.postView.render();
-            });
-        },
-        infiniteScroll: function()
-        {
-            if($window.scrollTop() >= $document.height() - $window.height() - 50)
-            {
-                this.addPosts();
-            }
-        },
-        enableInfiniteScroll: function()
-        {
-            var self = this;
-
-            $window.on('scroll', function()
-            {
-                self.infiniteScroll();
-            });
-        },
-        disableInifiniteScroll: function()
-        {
-            $window.off('scroll');
+            this.addOnePost( posts[i] );
         }
-    });
+    },
+    addOnePost: function(model)
+    {
+        var view = new PostViewPartial({
+            model: model
+        });
+        this.$el.append( view.render().el );
+    },
+    showPost: function(id)
+    {
+        var self = this;
+
+        this.disableInifiniteScroll();
+
+        this.fetching.done(function()
+        {
+            var model = self.collection.get(id);
+
+            if(!self.postView)
+            {
+                self.postView = new self.options.postView({
+                    el: self.el
+                });
+            }
+            self.postView.model = model;                   
+            self.postView.render();
+        });
+    },
+    infiniteScroll: function()
+    {
+        if($window.scrollTop() >= $document.height() - $window.height() - 50)
+        {
+            this.addPosts();
+        }
+    },
+    enableInfiniteScroll: function()
+    {
+        var self = this;
+
+        $window.on('scroll', function()
+        {
+            self.infiniteScroll();
+        });
+    },
+    disableInifiniteScroll: function()
+    {
+        $window.off('scroll');
+    }
+});
+```
 
 
 
 ### PostCollection
 
-	// the posts collection is configured to fetch
-    // from our API, as well as use our PostModel
-    var PostCollection = bb.Collection.extend({
-        url: '/v1/posts'
-    });
-
+```js
+// the posts collection is configured to fetch
+// from our API, as well as use our PostModel
+var PostCollection = bb.Collection.extend({
+    url: '/v1/posts'
+});
+```
 
 
 
 ### Blog Router
 
-	var BlogRouter = bb.Router.extend({
-        routes: {
-            "": "index",
-            "posts/:id": "show"
-        },
-        initialize: function(options)
-        {
-            // i do this to avoid having to hardcode an instance of a view
-            // when we instantiate the router we will pass in the view instance
-            this.blog = options.blog;
-        },
-        index: function()
-        {
-            //reset the paginator
-            this.blog.page = 0;
+```js
+var BlogRouter = bb.Router.extend({
+    routes: {
+        "": "index",
+        "posts/:id": "show"
+    },
+    initialize: function(options)
+    {
+        // i do this to avoid having to hardcode an instance of a view
+        // when we instantiate the router we will pass in the view instance
+        this.blog = options.blog;
+    },
+    index: function()
+    {
+        //reset the paginator
+        this.blog.page = 0;
 
-            //render the post list
-            this.blog.render();
-        },
-        show: function(id)
-        {
-            //render the full-post view
-            this.blog.showPost(id);
-        }
-    });
-
+        //render the post list
+        this.blog.render();
+    },
+    show: function(id)
+    {
+        //render the full-post view
+        this.blog.showPost(id);
+    }
+});
+```
 
 
 
 ### Notifications Collection
 
-	var notifications = new bb.Collection();
-
+```js
+var notifications = new bb.Collection();
+```
 
 
 ### NotificationsView
 
-	var NotificationView = BaseView.extend({
-        el: $('#notifications'),
-        view: 'layouts._notification',
-        events: {
+```js
+var NotificationView = BaseView.extend({
+    el: $('#notifications'),
+    view: 'layouts._notification',
+    events: {
 
-        },
-        initialize: function()
+    },
+    initialize: function()
+    {
+        this.listenTo(notifications, 'add', this.render);
+    },
+    render: function(notification)
+    {
+        var $message = $( this.template(notification.toJSON()) );
+        this.$el.append($message);
+        this.delayedHide($message);
+    },
+    delayedHide: function($message)
+    {
+        var timeout = setTimeout(function()
         {
-            this.listenTo(notifications, 'add', this.render);
-        },
-        render: function(notification)
-        {
-            var $message = $( this.template(notification.toJSON()) );
-            this.$el.append($message);
-            this.delayedHide($message);
-        },
-        delayedHide: function($message)
-        {
-            var timeout = setTimeout(function()
+            $message.fadeOut(function()
             {
-                $message.fadeOut(function()
-                {
-                    $message.remove();
-                });
-            }, 5*1000);
+                $message.remove();
+            });
+        }, 5*1000);
 
-            var self = this;
-            $message.hover(
-                function()
-                {
-                    timeout = clearTimeout(timeout);   
-                },
-                function()
-                {
-                    self.delayedHide($message);
-                }
-            );
-        }
-    });
-    var notificationView = new NotificationView();
-
+        var self = this;
+        $message.hover(
+            function()
+            {
+                timeout = clearTimeout(timeout);   
+            },
+            function()
+            {
+                self.delayedHide($message);
+            }
+        );
+    }
+});
+var notificationView = new NotificationView();
+```
 
 
 
 ### Error Handling
 
-	$.ajaxSetup({
-        statusCode: {
-            404: function()
-            {
-                notification.add({
-                    type: 'error', //error, success, info, null
-                    message: '404: Page Not Found'
-                });
-            }
+```js
+$.ajaxSetup({
+    statusCode: {
+        404: function()
+        {
+            notification.add({
+                type: 'error', //error, success, info, null
+                message: '404: Page Not Found'
+            });
         }
-    });
-
+    }
+});
+```
 
 
 
 ## Event Listeners
 
-	$document.on("click", "a[href]:not([data-bypass])", function(e){
-        e.preventDefault();
-        e.stopPropagation();
+```js
+$document.on("click", "a[href]:not([data-bypass])", function(e){
+    e.preventDefault();
+    e.stopPropagation();
 
-        var href = $(this).attr("href");
-        bb.history.navigate(href, true);
-    });
+    var href = $(this).attr("href");
+    bb.history.navigate(href, true);
+});
 
-    $document.on("click", "[data-toggle='view']", function(e)
-    {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        var
-            self = $(this),
-            href = self.attr('data-target') || self.attr('href')
-        ;
+$document.on("click", "[data-toggle='view']", function(e)
+{
+    e.preventDefault();
+    e.stopPropagation();
+    
+    var
+        self = $(this),
+        href = self.attr('data-target') || self.attr('href')
+    ;
 
-        bb.history.navigate(href, true);
-    });
+    bb.history.navigate(href, true);
+});
+```
 
 
 
@@ -2672,23 +2745,24 @@ The PostView renders a single blog post
 
 ### Start The App
 
-	var BlogApp = new Blog({
-        el             : $('[data-role="main"]'),
-        collection     : new PostCollection(),
-        postView       : PostView,
-        perPage        : 15,
-        page           : 0,
-        infiniteScroll : true
-    });
+```js
+var BlogApp = new Blog({
+    el             : $('[data-role="main"]'),
+    collection     : new PostCollection(),
+    postView       : PostView,
+    perPage        : 15,
+    page           : 0,
+    infiniteScroll : true
+});
 
-    var router = new BlogRouter({
-        blog: BlogApp
-    });
+var router = new BlogRouter({
+    blog: BlogApp
+});
 
-    if (typeof window.silentRouter === 'undefined') window.silentRouter = true;
+if (typeof window.silentRouter === 'undefined') window.silentRouter = true;
 
-    bb.history.start({ pushState: true, root: '/', silent: window.silentRouter });
-
+bb.history.start({ pushState: true, root: '/', silent: window.silentRouter });
+```
 
 
 
