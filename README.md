@@ -10,9 +10,9 @@ For this project we will be using:
 
 - [Laravel 4](http://four.laravel.com): A great PHP framework
 - [Mustache.php](https://github.com/bobthecow/mustache.php): The PHP rendering engine for [Mustache](http://mustache.github.io/)
-- [Mustache.js](https://github.com/janl/mustache.js/): The Javascript rendering engine for Mustache
+- [Mustache.js](https://github.com/janl/mustache.js/): The Javascript rendering engine for [Mustache](http://mustache.github.io/)
 - [Jeffrey Way's Generators for Laravel 4](https://github.com/JeffreyWay/Laravel-4-Generators): Improve our workflow by generating some boilerplate code for us
-- [Twitter Bootstrap](http://twitter.github.io/bootstrap/): A front end library do aid in our styling.
+- [Twitter Bootstrap](http://twitter.github.io/bootstrap/): A front end library to aid in our styling.
 - [PHPUnit](https://github.com/sebastianbergmann/phpunit/): A PHP testing suite
 - [Mockery](https://github.com/padraic/mockery): For mocking PHP Objects while testing
 - [Backbone.js](http://backbonejs.org/): A Javascript MVC for our single page app
@@ -21,7 +21,7 @@ For this project we will be using:
 To complete this tutorial, you will need the following items installed:
 
 - [Composer](http://getcomposer.org/):  You can download this from the homepage, I recommend the global install instructions located [here](http://getcomposer.org/doc/00-intro.md#globally)
-- [Node + NPM](http://nodejs.org/): the installed on the homepage will install both items
+- [Node + NPM](http://nodejs.org/): the installer on the homepage will install both items
 - [LESS](http://lesscss.org/) Compiler:  If you are on a Mac, I recommend CodeKit. However regardless of your operating system, or if you do not feel like paying for CodeKit, you can just install the LESS Compiler for Node.js by typing `npm install -g less` at the command prompt.
 
 
@@ -206,7 +206,7 @@ For our layout file, Twitter Bootstrap also provides us with some nice starter t
 
 	cp vendor/twitter/bootstrap/docs/examples/starter-template.html public/views/layouts/application.blade.php
 
-> Note:: notice that I am using a blade extension here, this could just as easily be a mustache template, but I wanted to show you how easy it is to mix the templating engines.  In addition, we get some really useful helpers in our blade files, and since our layout will be rendered on page load, and will not need to be re-rendered by the client, we are safe to use PHP here exclusively.  If for some reason you found yourself needing to render this file on the client-side, you would want to switch this file to use the Mustache template engine instead.
+> Note: notice that I am using a blade extension here, this could just as easily be a mustache template, but I wanted to show you how easy it is to mix the templating engines.  In addition, we get some really useful helpers in our blade files, and since our layout will be rendered on page load, and will not need to be re-rendered by the client, we are safe to use PHP here exclusively.  If for some reason you found yourself needing to render this file on the client-side, you would want to switch this file to use the Mustache template engine instead.
 
 Now that we have all of our basic files in place, let's add some starter content that we can use to test that everything is working as we would expect.  I am providing you with some basic stubs to get you started.  
 
@@ -1303,107 +1303,111 @@ Now that we have a general overview of what I consider to be a very functional a
 
 If you take a read through the controller tests, you will see that all we really care about is how the controller is interacting with the repository.  So let's see how light that makes our controllers.
 
+In this stage of TDD, literally all you want to do is make your tests pass, that is your only focus point.
+
 app/controllers/V1/PostsController.php
 
-	<?php
-	namespace V1;
+```php
+<?php
+namespace V1;
 
-	use BaseController;
-	use PostRepositoryInterface;
-	use Input;
-	use View;
+use BaseController;
+use PostRepositoryInterface;
+use Input;
+use View;
 
-	class PostsController extends BaseController {
+class PostsController extends BaseController {
 
-		/**
-		 * We will use Laravel's dependency injection to auto-magically
-		 * "inject" our repository instance into our controller
-		 */
-		public function __construct(PostRepositoryInterface $posts)
-		{
-			$this->posts = $posts;
-		}
-
-		/**
-		 * Display a listing of the resource.
-		 *
-		 * @return Response
-		 */
-		public function index()
-		{
-			return $this->posts->findAll();
-		}
-
-		/**
-		 * Show the form for creating a new resource.
-		 *
-		 * @return Response
-		 */
-		public function create()
-		{
-			$post = $this->posts->instance();
-			return View::make('posts._form', compact('post'));
-		}
-
-		/**
-		 * Store a newly created resource in storage.
-		 *
-		 * @return Response
-		 */
-		public function store()
-		{
-			return $this->posts->store( Input::all() );
-		}
-
-		/**
-		 * Display the specified resource.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function show($id)
-		{
-			return $this->posts->findById($id);
-		}
-
-		/**
-		 * Show the form for editing the specified resource.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function edit($id)
-		{
-			$post = $this->posts->findById($id);
-			return View::make('posts._form', compact('post'));
-		}
-
-		/**
-		 * Update the specified resource in storage.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function update($id)
-		{
-			return $this->posts->update($id, Input::all());
-		}
-
-		/**
-		 * Remove the specified resource from storage.
-		 *
-		 * @param  int  $id
-		 * @return Response
-		 */
-		public function destroy($id)
-		{
-			$this->posts->destroy($id);
-			return '';
-		}
-
+	/**
+	 * We will use Laravel's dependency injection to auto-magically
+	 * "inject" our repository instance into our controller
+	 */
+	public function __construct(PostRepositoryInterface $posts)
+	{
+		$this->posts = $posts;
 	}
 
-app/controllers/PostsCommentsController.php
+	/**
+	 * Display a listing of the resource.
+	 *
+	 * @return Response
+	 */
+	public function index()
+	{
+		return $this->posts->findAll();
+	}
+
+	/**
+	 * Show the form for creating a new resource.
+	 *
+	 * @return Response
+	 */
+	public function create()
+	{
+		$post = $this->posts->instance();
+		return View::make('posts._form', compact('post'));
+	}
+
+	/**
+	 * Store a newly created resource in storage.
+	 *
+	 * @return Response
+	 */
+	public function store()
+	{
+		return $this->posts->store( Input::all() );
+	}
+
+	/**
+	 * Display the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function show($id)
+	{
+		return $this->posts->findById($id);
+	}
+
+	/**
+	 * Show the form for editing the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function edit($id)
+	{
+		$post = $this->posts->findById($id);
+		return View::make('posts._form', compact('post'));
+	}
+
+	/**
+	 * Update the specified resource in storage.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function update($id)
+	{
+		return $this->posts->update($id, Input::all());
+	}
+
+	/**
+	 * Remove the specified resource from storage.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function destroy($id)
+	{
+		$this->posts->destroy($id);
+		return '';
+	}
+
+}
+```
+
+**app/controllers/PostsCommentsController.php**
 
 	<?php
 	namespace V1;
