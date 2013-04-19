@@ -449,7 +449,7 @@ If you followed along correctly, you should be laughing hysterically at my horri
 
 ## Part 2: Laravel 4 JSON API
 
-Now we will build our API that will power our Backbone application.  Laravel 4 makes this process a breeze.
+Now we will build the API that will power our Backbone application.  Laravel 4 makes this process a breeze.
 
 ### API Rules
 First let's go over a few general guidelines to keep in mind while we build an API:
@@ -478,15 +478,20 @@ First let's go over a few general guidelines to keep in mind while we build an A
 
 ### Routing & Versioning
 
-API's are designed to be around for a while, this is not like your website where you can just change its functionality at the drop of a dime.  If you have programs that use your API, they are not going to be happy with you if you change things around in the API and everything breaks.  For this reason it is important that you version your API's.
+API's are designed to be around for a while. This is not like your website where you can just change its functionality at the drop of a dime.  If you have programs that use your API, they are not going to be happy with you if you change things around in the API and everything breaks.  For this reason it is important that you use versioning.
+We can always create a "version 2" with additional, or altered functionality, and allow our subscribing programs opt-in to these changes, rather than be forced.
 
 Laravel provides us with route groups that are perfect for this, place the following code ABOVE our first route:
 
-	//create a group of routes that will belong to APIv1
-	Route::group(array('prefix' => 'v1'), function()
-	{
-		//... insert API routes here...
-	});
+```php
+<?php
+
+//create a group of routes that will belong to APIv1
+Route::group(array('prefix' => 'v1'), function()
+{
+	//... insert API routes here...
+});
+```
 
 
 
@@ -504,7 +509,7 @@ We are going to need only 2 resources for this app: a Post resource, and a Comme
 
 > Note: in a recent update to the generators, I have been receiving a permissions error due to the way my web servers are setup.  To remedy this problem, I just open up the permissions for the folder that the generators use.  Normally I would not open permissions up this way, but this change will only be affected in our development environment so it is safe.
 	
-	sudo chmod -R 777 vendor/way/generators/src/Way/
+	sudo chmod -R 755 vendor/way/generators/src/Way/
 
 	php artisan generate:resource post --fields="title:string, content:text, author_name:string"
 
@@ -517,35 +522,38 @@ Take a second to investigate all of the files that it created for us.
 
 ### Adjust the generated resources:
 
-The resource generator saved us a lot of work, but due to our unique congiguration, we are still going to need to make some modifications.
+The resource generator saved us a lot of work, but due to our unique configuration, we are still going to need to make some modifications.
 
 First of all, the generator placed the views it created in the `app/views` folder, so we need to move them to the `public/views` folder
 
 	mv app/views/posts public/views/posts
 	mv app/views/comments public/views/comments
 
-We decided that we wanted our API to be versioned, so we will need to move the routes the generator created for us into the version group.  We will want to namespace our controllers with the corresponding version, so that we can have a different set of controllers for each version we build, and we will also want to nest our comments resource under the posts resource.
+*** 
 
-app/routes.php
+**app/routes.php**
 
-	<?php
+We decided that we wanted our API to be versioned, so we will need to move the routes the generator created for us into the version group.  We will also want to namespace our controllers with the corresponding version, so that we can have a different set of controllers for each version we build, and we will also want to nest our comments resource under the posts resource.
 
-	//create a group of routes that will belong to APIv1
-	Route::group(array('prefix' => 'v1'), function()
-	{
-		//... insert API routes here...
-		Route::resource('posts', 'V1\PostsController'); //notice the namespace
-		Route::resource('posts.comments', 'V1\PostsCommentsController'); //notice the namespace, and the nesting
-	});
+```php
+<?php
 
-	//backbone app route
-	Route::get('/', function()
-	{
-	    //change our view name to the view we created in a previous step
-	    //notice that we do not need to provide the .mustache extension
-	    return View::make('layouts.application')->nest('content', 'app');
-	});
+//create a group of routes that will belong to APIv1
+Route::group(array('prefix' => 'v1'), function()
+{
+	//... insert API routes here...
+	Route::resource('posts', 'V1\PostsController'); //notice the namespace
+	Route::resource('posts.comments', 'V1\PostsCommentsController'); //notice the namespace, and the nesting
+});
 
+//backbone app route
+Route::get('/', function()
+{
+    //change our view name to the view we created in a previous step
+    //notice that we do not need to provide the .mustache extension
+    return View::make('layouts.application')->nest('content', 'app');
+});
+```
 
 Since we namespaced our controllers, we should move them into their own folder for organization, let's create a folder named `V1` and move our generated controllers into it.  Also, since we nested our comments controller under the posts controller, let's change the name of that controller to reflect the relationship.
 
@@ -555,29 +563,32 @@ Since we namespaced our controllers, we should move them into their own folder f
 
 We need to make a few modifications to the controllers files now:
 
-app/controllers/PostsController.php
+**app/controllers/PostsController.php**
 
-	<?php
-	//use our new namespace
-	namespace V1;
+```php
+<?php
+//use our new namespace
+namespace V1;
 
-	//import classes that are not in this new namespace
-	use BaseController;
+//import classes that are not in this new namespace
+use BaseController;
 
-	class PostsController extends BaseController {
+class PostsController extends BaseController {
+```
 
-app/controllers/PostsCommentsController.php
+**app/controllers/PostsCommentsController.php**
 
-	<?php
-	//use our new namespace
-	namespace V1;
+```php
+<?php
+//use our new namespace
+namespace V1;
 
-	//import classes that are not in this new namespace
-	use BaseController;
+//import classes that are not in this new namespace
+use BaseController;
 
-	//rename our controller class
-	class PostsCommentsController extends BaseController {
-
+//rename our controller class
+class PostsCommentsController extends BaseController {
+```
 
 
 
@@ -594,36 +605,37 @@ make a folder to store our repositories
 
 To let our auto-loader know about this new folder, we need to add it to our `composer.json` file.  Take a look at the updated "autoload" section of our file, and see that we added the repositories folder.
 
-composer.json
+**composer.json**
 
-	{
-	    "require": {
-	        "laravel/framework": "4.0.*",
-	        "way/generators": "dev-master",
-	        "twitter/bootstrap": "dev-master",
-	        "conarwelsh/mustache-l4": "dev-master"
-	    },
-	    "require-dev": {
-	        "phpunit/phpunit": "3.7.*",
-	        "mockery/mockery": "0.7.*"
-	    },
-	    "autoload": {
-	        "classmap": [
-	            "app/commands",
-	            "app/controllers",
-	            "app/models",
-	            "app/database/migrations",
-	            "app/database/seeds",
-	            "app/tests/TestCase.php",
-	            "app/repositories"
-	        ]
-	    },
-	    "scripts": {
-	        "post-update-cmd": "php artisan optimize"
-	    },
-	    "minimum-stability": "dev"
-	}
-
+```json
+{
+    "require": {
+        "laravel/framework": "4.0.*",
+        "way/generators": "dev-master",
+        "twitter/bootstrap": "dev-master",
+        "conarwelsh/mustache-l4": "dev-master"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*",
+        "mockery/mockery": "0.7.*"
+    },
+    "autoload": {
+        "classmap": [
+            "app/commands",
+            "app/controllers",
+            "app/models",
+            "app/database/migrations",
+            "app/database/seeds",
+            "app/tests/TestCase.php",
+            "app/repositories"
+        ]
+    },
+    "scripts": {
+        "post-update-cmd": "php artisan optimize"
+    },
+    "minimum-stability": "dev"
+}
+```
 
 
 
@@ -635,74 +647,78 @@ composer.json
 
 Database seeds are a useful tool, they provide us with an easy way to fill our database with some content.  The generators provided us with base files for seeding, we merely need to add in some actual seeds.
 
-app/database/seeds/PostsTableSeeder.php
+**app/database/seeds/PostsTableSeeder.php**
 
-	<?php
+```php
+<?php
 
-	class PostsTableSeeder extends Seeder {
+class PostsTableSeeder extends Seeder {
 
-	    public function run()
-	    {
-	        $posts = array(
-	        	array(
-	                'title'       => 'Test Post',
-	                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
-	                'author_name' => 'Conar Welsh',
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	            array(
-	                'title'       => 'Another Test Post',
-	                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
-	                'author_name' => 'Conar Welsh',
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	        );
+    public function run()
+    {
+        $posts = array(
+        	array(
+                'title'       => 'Test Post',
+                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
+                'author_name' => 'Conar Welsh',
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+            array(
+                'title'       => 'Another Test Post',
+                'content'     => 'Lorem ipsum Reprehenderit velit est irure in enim in magna aute occaecat qui velit ad.',
+                'author_name' => 'Conar Welsh',
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+        );
 
-	        // Uncomment the below to run the seeder
-	        DB::table('posts')->insert($posts);
-	    }
+        // Uncomment the below to run the seeder
+        DB::table('posts')->insert($posts);
+    }
 
-	}
+}
+```
 
-app/database/seeds/CommentsTableSeeder.php
+**app/database/seeds/CommentsTableSeeder.php**
 
-	<?php
+```php
+<?php
 
-	class CommentsTableSeeder extends Seeder {
+class CommentsTableSeeder extends Seeder {
 
-	    public function run()
-	    {
-	        $comments = array(
-	        	array(
-	                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
-	                'author_name' => 'Testy McTesterson',
-	                'post_id'     => 1,
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	            array(
-	                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
-	                'author_name' => 'Testy McTesterson',
-	                'post_id'     => 1,
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	            array(
-	                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
-	                'author_name' => 'Testy McTesterson',
-	                'post_id'     => 2,
-	                'created_at'  => date('Y-m-d H:i:s'),
-	                'updated_at'  => date('Y-m-d H:i:s'),
-	            ),
-	        );
+    public function run()
+    {
+        $comments = array(
+        	array(
+                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
+                'author_name' => 'Testy McTesterson',
+                'post_id'     => 1,
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+            array(
+                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
+                'author_name' => 'Testy McTesterson',
+                'post_id'     => 1,
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+            array(
+                'content'     => 'Lorem ipsum Nisi dolore ut incididunt mollit tempor proident eu velit cillum dolore sed',
+                'author_name' => 'Testy McTesterson',
+                'post_id'     => 2,
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ),
+        );
 
-	        // Uncomment the below to run the seeder
-	        DB::table('comments')->insert($comments);
-	    }
+        // Uncomment the below to run the seeder
+        DB::table('comments')->insert($comments);
+    }
 
-	}
+}
+```
 
 Do not forget to run `composer dump-autoload` to let the Composer auto loader know about the new migration files!
 
@@ -729,9 +745,9 @@ Now we can run our migrations, and seed the database. Laravel provides us with a
 
 ### Tests
 
-Testing is one of those topics in development that no one can argue the importance of, however most people tend to ignore due to the learning curve.  However testing is really not that difficult, and can really improve your application.  For this tutorial, we will setup some basic tests to help us ensure that our API is functioning properly.  We will do this in a TDD style, however if I were to walk you through each test individually, this would prove to be a very long tutorial, so in the interest of brevity, I will just provide you with some tests to work from.
+Testing is one of those topics in development that no one can argue the importance of, however most people tend to ignore due to the learning curve.  However testing is really not that difficult, and can really improve your application.  For this tutorial, we will setup some basic tests to help us ensure that our API is functioning properly.  We will build this API TDD style.  The rules of TDD state that we are not allowed to write any production code, until we have failing tests that warrants it.  However if I were to walk you through each test individually, this would prove to be a very long tutorial, so in the interest of brevity, I will just provide you with some tests to work from, and then the correct code to make them pass afterwards.
 
-Before we write any tests though, we should first check the current status of our tests.  Since we installed PHPUnit via composer, we have the binaries available to us to use.  All you need to do is run:
+Before we write any tests though, we should first check the current test status of our application.  Since we installed PHPUnit via composer, we have the binaries available to us to use.  All you need to do is run:
 
 	vendor/phpunit/phpunit/phpunit.php
 
@@ -739,7 +755,7 @@ Whoops! We already have a failure!  The test that is failing is actually an exam
 
 	rm -rf app/tests/ExampleTest.php
 
-If you run the PHPUnit command again, you will see that no tests were executed, and we have a clean slate for testing.  The rules of TDD state that we are not allowed to write any production code, until we have failing tests that warrants it.
+If you run the PHPUnit command again, you will see that no tests were executed, and we have a clean slate for testing.
 
 > Note: it is possible that if you have an older version of Jeffrey Way's generators that you will actually have a few tests in there that were created by those generators, and those tests are probably failing.  Just delete or overwrite those tests with the ones found below to proceed.
 
@@ -749,120 +765,123 @@ For this tutorial we will be testing our controllers and our repositories.  Let'
 
 Now for the test files.  We are going to use Mockery to mock our repositories for our controller tests, for now just put the code in as is, we will explain/develop this functionality shortly.
 
+
+
 app/tests/controllers/CommentsControllerTest.php
 
-	<?php
+```php
+<?php
 
-	class CommentsControllerTest extends TestCase {
+class CommentsControllerTest extends TestCase {
 
-		/**
-		 * Basic Route Tests
-		 * notice that we can use our route() helper here!
-		 */
-		public function testIndex()
-		{
-			$response = $this->call('GET', route('v1.posts.comments.index', array(1)) );
-			$this->assertTrue($response->isOk());
-		}
-
-		public function testShow()
-		{
-			$response = $this->call('GET', route('v1.posts.comments.show', array(1,1)) );
-			$this->assertTrue($response->isOk());
-		}
-
-		public function testCreate()
-		{
-			$response = $this->call('GET', route('v1.posts.comments.create', array(1)) );
-			$this->assertTrue($response->isOk());
-		}
-
-		public function testEdit()
-		{
-			$response = $this->call('GET', route('v1.posts.comments.edit', array(1,1)) );
-			$this->assertTrue($response->isOk());
-		}
-
-		/**
-		 * Test that the controller calls repo as we expect
-		 * notice we are Mocking our repository
-		 * also notice that we do not really care about the data or interactions
-		 * we merely care that the controller is doing what we are going to want
-		 * it to do, which is reach out to our repository for more information
-		 */
-		public function testIndexShouldCallFindAllMethod()
-		{
-			$mock = Mockery::mock('CommentRepositoryInterface');
-			$mock->shouldReceive('findAll')->once()->andReturn('foo');
-			App::instance('CommentRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.comments.index', array(1)));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testShowShouldCallFindById()
-		{
-			$mock = Mockery::mock('CommentRepositoryInterface');
-			$mock->shouldReceive('findById')->once()->andReturn('foo');
-			App::instance('CommentRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.comments.show', array(1,1)));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testCreateShouldCallInstanceMethod()
-		{
-			$mock = Mockery::mock('CommentRepositoryInterface');
-			$mock->shouldReceive('instance')->once()->andReturn(array());
-			App::instance('CommentRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.comments.create', array(1)));
-			$this->assertViewHas('comment');
-		}
-
-		public function testEditShouldCallFindByIdMethod()
-		{
-			$mock = Mockery::mock('CommentRepositoryInterface');
-			$mock->shouldReceive('findById')->once()->andReturn(array());
-			App::instance('CommentRepositoryInterface', $mock);
-
-			$response = $this->call('GET', route('v1.posts.comments.edit', array(1,1)));
-			$this->assertViewHas('comment');
-		}
-
-		public function testStoreShouldCallStoreMethod()
-		{
-			$mock = Mockery::mock('CommentRepositoryInterface');
-			$mock->shouldReceive('store')->once()->andReturn('foo');
-			App::instance('CommentRepositoryInterface', $mock);
-
-			$response = $this->call('POST', route('v1.posts.comments.store', array(1)));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testUpdateShouldCallUpdateMethod()
-		{
-			$mock = Mockery::mock('CommentRepositoryInterface');
-			$mock->shouldReceive('update')->once()->andReturn('foo');
-			App::instance('CommentRepositoryInterface', $mock);
-
-			$response = $this->call('PUT', route('v1.posts.comments.update', array(1,1)));
-			$this->assertTrue(!! $response->original);
-		}
-
-		public function testDestroyShouldCallDestroyMethod()
-		{
-			$mock = Mockery::mock('CommentRepositoryInterface');
-			$mock->shouldReceive('destroy')->once()->andReturn(true);
-			App::instance('CommentRepositoryInterface', $mock);
-
-			$response = $this->call('DELETE', route('v1.posts.comments.destroy', array(1,1)));
-			$this->assertTrue( empty($response->original) );
-		}
-
-
+	/**
+	 * Basic Route Tests
+	 * notice that we can use our route() helper here!
+	 */
+	public function testIndex()
+	{
+		$response = $this->call('GET', route('v1.posts.comments.index', array(1)) );
+		$this->assertTrue($response->isOk());
 	}
 
+	public function testShow()
+	{
+		$response = $this->call('GET', route('v1.posts.comments.show', array(1,1)) );
+		$this->assertTrue($response->isOk());
+	}
+
+	public function testCreate()
+	{
+		$response = $this->call('GET', route('v1.posts.comments.create', array(1)) );
+		$this->assertTrue($response->isOk());
+	}
+
+	public function testEdit()
+	{
+		$response = $this->call('GET', route('v1.posts.comments.edit', array(1,1)) );
+		$this->assertTrue($response->isOk());
+	}
+
+	/**
+	 * Test that the controller calls repo as we expect
+	 * notice we are Mocking our repository
+	 * also notice that we do not really care about the data or interactions
+	 * we merely care that the controller is doing what we are going to want
+	 * it to do, which is reach out to our repository for more information
+	 */
+	public function testIndexShouldCallFindAllMethod()
+	{
+		$mock = Mockery::mock('CommentRepositoryInterface');
+		$mock->shouldReceive('findAll')->once()->andReturn('foo');
+		App::instance('CommentRepositoryInterface', $mock);
+
+		$response = $this->call('GET', route('v1.posts.comments.index', array(1)));
+		$this->assertTrue(!! $response->original);
+	}
+
+	public function testShowShouldCallFindById()
+	{
+		$mock = Mockery::mock('CommentRepositoryInterface');
+		$mock->shouldReceive('findById')->once()->andReturn('foo');
+		App::instance('CommentRepositoryInterface', $mock);
+
+		$response = $this->call('GET', route('v1.posts.comments.show', array(1,1)));
+		$this->assertTrue(!! $response->original);
+	}
+
+	public function testCreateShouldCallInstanceMethod()
+	{
+		$mock = Mockery::mock('CommentRepositoryInterface');
+		$mock->shouldReceive('instance')->once()->andReturn(array());
+		App::instance('CommentRepositoryInterface', $mock);
+
+		$response = $this->call('GET', route('v1.posts.comments.create', array(1)));
+		$this->assertViewHas('comment');
+	}
+
+	public function testEditShouldCallFindByIdMethod()
+	{
+		$mock = Mockery::mock('CommentRepositoryInterface');
+		$mock->shouldReceive('findById')->once()->andReturn(array());
+		App::instance('CommentRepositoryInterface', $mock);
+
+		$response = $this->call('GET', route('v1.posts.comments.edit', array(1,1)));
+		$this->assertViewHas('comment');
+	}
+
+	public function testStoreShouldCallStoreMethod()
+	{
+		$mock = Mockery::mock('CommentRepositoryInterface');
+		$mock->shouldReceive('store')->once()->andReturn('foo');
+		App::instance('CommentRepositoryInterface', $mock);
+
+		$response = $this->call('POST', route('v1.posts.comments.store', array(1)));
+		$this->assertTrue(!! $response->original);
+	}
+
+	public function testUpdateShouldCallUpdateMethod()
+	{
+		$mock = Mockery::mock('CommentRepositoryInterface');
+		$mock->shouldReceive('update')->once()->andReturn('foo');
+		App::instance('CommentRepositoryInterface', $mock);
+
+		$response = $this->call('PUT', route('v1.posts.comments.update', array(1,1)));
+		$this->assertTrue(!! $response->original);
+	}
+
+	public function testDestroyShouldCallDestroyMethod()
+	{
+		$mock = Mockery::mock('CommentRepositoryInterface');
+		$mock->shouldReceive('destroy')->once()->andReturn(true);
+		App::instance('CommentRepositoryInterface', $mock);
+
+		$response = $this->call('DELETE', route('v1.posts.comments.destroy', array(1,1)));
+		$this->assertTrue( empty($response->original) );
+	}
+
+
+}
+```
 
 app/tests/controllers/PostsControllerTest.php
 
