@@ -1,16 +1,33 @@
-## What we are going to be building:
+## Laravel 4 & Backbone
 
-- JSON API using Laravel 4
-- Use Composer for all server-side dependencies
-- A single page app using Backbone.js
-- Use NPM to manage all client-side dependencies
+For this tutorial, we are going to be building a single page app using Laravel 4 and Backbone.js.  Both frameworks make it very easy to use a template engine other than their respective default, so we are going to use Mustache, which is an engine that is common to both.  Using the same templating language on both sides of our application, will allow us to share our views betweem them, saving us from having to repeat our work multiple times.
 
-> Note: This tutorial assumes that you have Composer, NPM, and a LESS compiler installed.
+Our Backbone app will be powered by a Laravel 4 JSON API which we will develop.  Laravel 4 comes with some new features that make the development of this API very easy.  I will show you a few tricks along the way to allow you to stay a bit more organized in your development.
+
+All of our dependencies will be managed by Package Managers, there will be no manual downloading and updating of libraries for this application!  In addition, I will be showing you how to leverage a little extra power from some of our dependencies.
+
+For this project we will be using:
+
+- [Laravel 4](http://four.laravel.com): A great PHP framework
+- [Mustache.php](https://github.com/bobthecow/mustache.php): The PHP rendering engine for [Mustache](http://mustache.github.io/)
+- [Mustache.js](https://github.com/janl/mustache.js/): The Javascript rendering engine for Mustache
+- [Jeffrey Way's Generators for Laravel 4](https://github.com/JeffreyWay/Laravel-4-Generators): Improve our workflow by generating some boilerplate code for us
+- [Twitter Bootstrap](http://twitter.github.io/bootstrap/): A front end library do aid in our styling.
+- [PHPUnit](https://github.com/sebastianbergmann/phpunit/): A PHP testing suite
+- [Mockery](https://github.com/padraic/mockery): For mocking PHP Objects while testing
+- [Backbone.js](http://backbonejs.org/): A Javascript MVC for our single page app
+- [Underscore.js](http://underscorejs.org/): A dependency of Backbone, and a great little toolkit of functions.
+
+To complete this tutorial, you will need the following items installed:
+
+- [Composer](http://getcomposer.org/):  You can download this from the homepage, I recommend the global install instructions located [here](http://getcomposer.org/doc/00-intro.md#globally)
+- [Node + NPM](http://nodejs.org/): the installed on the homepage will install both items
+- [LESS](http://lesscss.org/) Compiler:  If you are on a Mac, I recommend CodeKit. However regardless of your operating system, or if you do not feel like paying for CodeKit, you can just install the LESS Compiler for Node.js by typing `npm install -g less` at the command prompt.
 
 
+## Part 1: The Base Architecture
 
-
-## Part 1: Architecture
+First thing first... we need to get our application setup before we can begin adding our business logic to it.  We will do a basic setup of Laravel 4, and the get all of our dependencies installed using our Package Managers.
 
 ### Git
 
@@ -21,118 +38,132 @@ Let's start by creating a git repository to work in.  For your reference this en
 
 ### Laravel 4 Install
 
-Laravel 4 uses Composer to install all of its dependencies, but first we will need an application structure to install into.  The develop branch on Laravel's Github repository is the home for this application structure.  However, since Laravel 4 is currently still in beta, we need to be prepared for this structure to change at any time.  By adding Laravel as a remote repository, we can pull in these changes whenever we need to.
+Laravel 4 uses Composer to install all of its dependencies, but first we will need an application structure to install into.  The develop branch on [Laravel's Github repository](https://github.com/laravel/laravel) is the home for this application structure.  However, since Laravel 4 is currently still in beta, we need to be prepared for this structure to change at any time.  By adding Laravel as a remote repository, we can pull in these changes whenever we need to.
 
 	git remote add laravel https://github.com/laravel/laravel
 	git fetch laravel
 	git merge laravel/develop
 	git add . && git commit -am "commit the laravel application structure"
 
-Now we have the application structure, but all of the library files that Laravel needs are not yet installed.  You will notice that at the root of our application there is a file called `composer.json`.  This is the file that will keep track of all the dependencies that our application requires.  Before we tell Composer to download and install them, let's first add a few more dependencies that we are going to need.  We will be adding:
+Now we have the application structure, but all of the library files that Laravel needs are not yet installed.  You will notice at the root of our application there is a file called `composer.json`.  This is the file that will keep track of all the dependencies that our Laravel application requires.  Before we tell Composer to download and install them, let's first add a few more dependencies that we are going to need.  We will be adding:
 
-- [Jeffrey Way's Generators](https://github.com/JeffreyWay/Laravel-4-Generators):  Some very useful commands to greatly improve our workflow by automatically generating file stubs for us.
-- [Laravel 4 Mustache](https://github.com/conarwelsh/mustache-l4):  This will allow us to seemlessly use Mustache.php in our Laravel project
-- [Twitter Bootstrap](http://twitter.github.io/bootstrap/):  We will use the LESS files from this project to speed up our front-end development.
-- [PHPUnit](https://github.com/sebastianbergmann/phpunit/):  We will be doing some TDD for our JSON API, PHPUnit will be our testing engine
-- [Mockery](https://github.com/padraic/mockery):  Mockery will help us "mock" objects during our testing
+- [Jeffrey Way's Generators](https://packagist.org/packages/way/generators):  Some very useful commands to greatly improve our workflow by automatically generating file stubs for us.
+- [Laravel 4 Mustache](https://packagist.org/packages/conarwelsh/mustache-l4):  This will allow us to seemlessly use Mustache.php in our Laravel project, just as we would Blade.
+- [Twitter Bootstrap](https://packagist.org/packages/twitter/bootstrap):  We will use the LESS files from this project to speed up our front-end development.
+- [PHPUnit](https://packagist.org/packages/phpunit/phpunit):  We will be doing some TDD for our JSON API, PHPUnit will be our testing engine
+- [Mockery](https://packagist.org/packages/mockery/mockery):  Mockery will help us "mock" objects during our testing
 
 PHPUnit and Mockery are only required in our development environment, so we will specify that in our composer.json file.
 
 composer.json
 
-	{
-	    "require": {
-	        "laravel/framework": "4.0.*",
-	        "way/generators": "dev-master",
-	        "twitter/bootstrap": "dev-master",
-	        "conarwelsh/mustache-l4": "dev-master"
-	    },
-	    "require-dev": {
-	        "phpunit/phpunit": "3.7.*",
-	        "mockery/mockery": "0.7.*"
-	    },
-	    "autoload": {
-	        "classmap": [
-	            "app/commands",
-	            "app/controllers",
-	            "app/models",
-	            "app/database/migrations",
-	            "app/database/seeds",
-	            "app/tests/TestCase.php"
-	        ]
-	    },
-	    "scripts": {
-	        "post-update-cmd": "php artisan optimize"
-	    },
-	    "minimum-stability": "dev"
-	}
+```json
+{
+    "require": {
+        "laravel/framework": "4.0.*",
+        "way/generators": "dev-master",
+        "twitter/bootstrap": "dev-master",
+        "conarwelsh/mustache-l4": "dev-master"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*",
+        "mockery/mockery": "0.7.*"
+    },
+    "autoload": {
+        "classmap": [
+            "app/commands",
+            "app/controllers",
+            "app/models",
+            "app/database/migrations",
+            "app/database/seeds",
+            "app/tests/TestCase.php"
+        ]
+    },
+    "scripts": {
+        "post-update-cmd": "php artisan optimize"
+    },
+    "minimum-stability": "dev"
+}
+```
 
 Now we just need to tell Composer to do all of our leg work!  Notice the --dev switch, we are telling composer that we are in our development evironment, and that it should also install all of our dependencies listed in `"require-dev"`.
 
 	composer install --dev
 
-After that finishes installing, we will need to inform Laravel of a few of our dependencies.  Laravel uses "service providers" for this purpose.  These service providers basically just tell Laravel how their code is going to interact with the application, and run any necessary setup procedures.  Open up `app/config/app.php` and add the following 2 items to the "providers" array.
+After that finishes installing, we will need to inform Laravel of a few of our dependencies.  Laravel uses "service providers" for this purpose.  These service providers basically just tell Laravel how their code is going to interact with the application, and run any necessary setup procedures.  Open up `app/config/app.php` and add the following 2 items to the "providers" array.  Not all packages require this, only those that will enhance or change the functionality of Laravel.
 
-	...
-	
-	'Way\Generators\GeneratorsServiceProvider',
-	'Conarwelsh\MustacheL4\MustacheL4ServiceProvider',
+```php
+...
 
-	...
+'Way\Generators\GeneratorsServiceProvider',
+'Conarwelsh\MustacheL4\MustacheL4ServiceProvider',
 
-Lastly, we just need to do some generic environment tweaks to complete our Laravel install.  First let's open up `bootstrap/start.php` and tell Laravel how to decide that it is in a development environment.
+...
+```
+
+Lastly, we just need to do some generic environment tweaks to complete our Laravel install.  First let's open up `bootstrap/start.php` and tell Laravel our machine name so that it can determine what environment it is in.
 
 bootstrap/start.php
 
-	/*
-	|--------------------------------------------------------------------------
-	| Detect The Application Environment
-	|--------------------------------------------------------------------------
-	|
-	| Laravel takes a dead simple approach to your application environments
-	| so you can just specify a machine name or HTTP host that matches a
-	| given environment, then we will automatically detect it for you.
-	|
-	*/
+```php
+/*
+|--------------------------------------------------------------------------
+| Detect The Application Environment
+|--------------------------------------------------------------------------
+|
+| Laravel takes a dead simple approach to your application environments
+| so you can just specify a machine name or HTTP host that matches a
+| given environment, then we will automatically detect it for you.
+|
+*/
 
-	$env = $app->detectEnvironment(array(
+$env = $app->detectEnvironment(array(
 
-		'local' => array('your-machine-name'),
+	'local' => array('your-machine-name'),
 
-	));
+));
+```
 
 Replace "your-machine-name" with whatever the hostname for your machine is.  If you are unsure of what your exact machine name is, you can just type `hostname` at the command prompt (on Mac or Linux), whatever it returns is the value that belongs in this setting.
 
-We want our views to be able to be served to our client from a web request.  Currently, our views are stored outside our `public` folder, which would means that they are not publicly accessible.  Luckily Laravel makes it very easy to move, or add another views folder to our setup!  Open up app/config/view.php and change the `paths` setting to the following, which will change the location of our views path to inside the public folder:
+We want our views to be able to be served to our client from a web request.  Currently, our views are stored outside our `public` folder, which would mean that they are not publicly accessible.  Luckily Laravel makes it very easy to move, or add other view folders.  Open up app/config/view.php and change the `paths` setting to point to our public folder.  This setting works like the PHP native include path, it will check in each folder until it finds a matching view file, so feel free to add several here:
 
-	'paths' => array(__DIR__.'/../../public/views'),
+```php
+'paths' => array(__DIR__.'/../../public/views'),
+```
 
 Next you will need to configure your database.  Open up `app/config/database.php` and add in your database settings.
 
+> Note: It is recommended to use `127.0.0.1` instead of `localhost`.  You get a bit of a performance boost on most systems, and with some system configurations, `localhost` will not even connect properly.
+
 Finally, you just need to make sure that your storage folder can be written to.
 
-	chmod -R 777 app/storage
+	chmod -R 755 app/storage
 
-Laravel is now installed, with all of its dependencies.  Now let's setup our Backbone install.  Just like our `composer.json` installed all of our server-side dependencies, we will create a `package.json` to install all of our client-side dependencies.
+Laravel is now installed, with all of its dependencies, as well as our own dependencies.  Now let's setup our Backbone install!
+
+Just like our `composer.json` installed all of our server-side dependencies, we will create a `package.json` to install all of our client-side dependencies.
 
 For our client-side dependencies we will use:
 
-- [Underscore.js](http://underscorejs.org/): This is a dependency of Backbone.js
-- [Backbone.js](http://backbonejs.org/): This is our client-side MVC that we will use to build out our application
-- [Mustache.js](https://github.com/janl/mustache.js/): The Javascript version of our templating library, by using the same templating language both on the client and the server, we can share views, as opposed to duplication logic.
+- [Underscore.js](https://npmjs.org/package/underscore): This is a dependency of Backbone.js, and a handy toolbelt of functions.
+- [Backbone.js](https://npmjs.org/package/backbone): This is our client-side MVC that we will use to build out our application.
+- [Mustache.js](https://npmjs.org/package/mustache): The Javascript version of our templating library, by using the same templating language both on the client and the server, we can share views, as opposed to duplicating logic.
 
 package.json
 
-	{
-	    "name": "nettuts-laravel4-and-backbone",
-	    "version": "0.0.1",
-	    "private": true,
-	    "dependencies": {
-	        "underscore": "*",
-	        "backbone": "*",
-	        "mustache": "*"
-	    }
-	}
+```json
+{
+    "name": "nettuts-laravel4-and-backbone",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "underscore": "*",
+        "backbone": "*",
+        "mustache": "*"
+    }
+}
+```
 
 Now just switch into your public folder, and run `npm install`.  After that completes lets switch back to our application root so we are prepared for the rest of our commands.
 
@@ -140,7 +171,7 @@ Now just switch into your public folder, and run `npm install`.  After that comp
 	npm install
 	cd ..
 
-Package managers save us from so much work, should you want to update any of these libraries, all you have to do is run `npm update` or `composer update`.  Also, should you want to lock any of these libraries in at a specific version, all you have to do is specify the version number, and the package manager will handle the rest.
+Package managers save us from a ton of work, should you want to update any of these libraries, all you have to do is run `npm update` or `composer update`.  Also, should you want to lock any of these libraries in at a specific version, all you have to do is specify the version number, and the package manager will handle the rest.
 
 To wrap up our setup process we will just add in all of the basic project files and folders that we will need, and then test that it all works OK.
 
@@ -166,192 +197,223 @@ Twitter Bootstrap also has 2 Javascript dependencies that we will need, so let's
 - html5shiv: allows us to use HTML5 elements without fear of older browsers not supporting them
 - bootstrap.js: the supporting Javascript libraries for Twitter Bootstrap
 
-	cp vendor/twitter/bootstrap/docs/assets/js/html5shiv.js public/js/html5shiv.js
-	cp vendor/twitter/bootstrap/docs/assets/js/bootstrap.min.js public/js/bootstrap.min.js
+```
+cp vendor/twitter/bootstrap/docs/assets/js/html5shiv.js public/js/html5shiv.js
+cp vendor/twitter/bootstrap/docs/assets/js/bootstrap.min.js public/js/bootstrap.min.js
+```
 
-For our layout file, Twitter Bootstrap also provides us with some nice starter templates to work with, so let's copy one into our layouts folder for a good head start
+For our layout file, Twitter Bootstrap also provides us with some nice starter templates to work with, so let's copy one into our layouts folder for a head start.
 
 	cp vendor/twitter/bootstrap/docs/examples/starter-template.html public/views/layouts/application.blade.php
 
 > Note:: notice that I am using a blade extension here, this could just as easily be a mustache template, but I wanted to show you how easy it is to mix the templating engines.  In addition, we get some really useful helpers in our blade files, and since our layout will be rendered on page load, and will not need to be re-rendered by the client, we are safe to use PHP here exclusively.  If for some reason you found yourself needing to render this file on the client-side, you would want to switch this file to use the Mustache template engine instead.
 
-Now that we have all of our basic files in place, let's add some starter content that we can use to test that everything is working as we would expect.  I am providing you with some basic stubs to get you started.
+Now that we have all of our basic files in place, let's add some starter content that we can use to test that everything is working as we would expect.  I am providing you with some basic stubs to get you started.  
 
-public/css/styles.less
+***
 
-	/**
-	 * Import Twitter Bootstrap Base File
-	 ******************************************************************************************
-	 */
-	@import "../../vendor/twitter/bootstrap/less/bootstrap";
+**public/css/styles.less**
 
+We will just import the Twitter Bootstrap files from the vendor directory as opposed to copying them.  This allows us to update Twitter Bootstrap with nothing but a `composer update`.  
 
-	/**
-	 * Define App Styles
-	 * I like to do this before the responsive include, so that it can override properly as needed.
-	 ******************************************************************************************
-	 */
-	body {
-	    padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-	}
+We declare our variables at the end of the file, the LESS compiler will figure out the value of all of its variables before parsing the LESS into CSS.  This means that by re-defining a Twitter Bootstrap variable at the end of the file, will actually change its value for all of the files included, allowing us to do simple overrides without modifying the Twitter Bootstrap files.
 
-	/* this will be set the position of our alerts */
-	#notifications {
-		width: 300px;
-		position: fixed;
-		top: 50px;
-		left: 50%;
-		margin-left: -150px;
-		text-align: center;
-	}
-
-	/**
-	 * Import Bootstrap's Responsive Overrides
-	 * now we allow bootstrap to set the overrides for a responsive layout
-	 ******************************************************************************************
-	 */
-	@import "../../vendor/twitter/bootstrap/less/responsive";
+```css
+/**
+ * Import Twitter Bootstrap Base File
+ ******************************************************************************************
+ */
+@import "../../vendor/twitter/bootstrap/less/bootstrap";
 
 
-	/**
-	 * Define our variables last, any variable declared here will be used in the includes above
-	 * which means that we can override any of the variables used in the bootstrap files easily
-	 ******************************************************************************************
-	 */
+/**
+ * Define App Styles
+ * Do this before the responsive include, so that it can override properly as needed.
+ ******************************************************************************************
+ */
+body {
+    padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+}
 
-	// Scaffolding
-	// -------------------------
-	@bodyBackground:        #f2f2f2;
-	@textColor:             #575757;
+/* this will set the position of our alerts */
+#notifications {
+	width: 300px;
+	position: fixed;
+	top: 50px;
+	left: 50%;
+	margin-left: -150px;
+	text-align: center;
+}
 
-	// Links
-	// -------------------------
-	@linkColor:             #41a096;
-
-	// Typography
-	// -------------------------
-	@sansFontFamily:        Arial, Helvetica, sans-serif;
-
-
-
-
-public/js/app.js
-
-	//alias the global object
-	//alias jQuery so we can potentially use other libraries that utilize $
-	//alias Backbone to save us on some typing
-	(function(exports, $, bb){
-
-	    //document ready
-	    $(function(){
-
-	        /**
-	         ***************************************
-	         * Cached Globals
-	         ***************************************
-	         */
-	        var $window, $body, $document;
-
-	        $window   = $(window);
-	        $body     = $('body');
-	        $document = $(document);
+/**
+ * Import Bootstrap's Responsive Overrides
+ * now we allow bootstrap to set the overrides for a responsive layout
+ ******************************************************************************************
+ */
+@import "../../vendor/twitter/bootstrap/less/responsive";
 
 
-	    });//end document ready
+/**
+ * Define our variables last, any variable declared here will be used in the includes above
+ * which means that we can override any of the variables used in the bootstrap files easily
+ * without modifying any of the core bootstrap files
+ ******************************************************************************************
+ */
 
-	}(this, jQuery, Backbone));
+// Scaffolding
+// -------------------------
+@bodyBackground:        #f2f2f2;
+@textColor:             #575757;
 
+// Links
+// -------------------------
+@linkColor:             #41a096;
 
+// Typography
+// -------------------------
+@sansFontFamily:        Arial, Helvetica, sans-serif;
+```
 
-
-
-public/views/layouts/application.blade.php
-
-	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-	  <meta charset="utf-8">
-	  <title>Laravel4 & Backbone | Nettuts</title>
-	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	  <meta name="description" content="A single page blog built using Backbone.js, Laravel, and Twitter Bootstrap">
-	  <meta name="author" content="Conar Welsh">
-
-	  <link href="{{ asset('css/styles.css') }}" rel="stylesheet">
-
-	  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-	  <!--[if lt IE 9]>
-	  <script src="{{ asset('js/html5shiv.js') }}"></script>
-	  <![endif]-->
-	</head>
-	<body>
-
-	  <div id="notifications">
-	  </div>
-
-	  <div class="navbar navbar-inverse navbar-fixed-top">
-	    <div class="navbar-inner">
-	      <div class="container">
-	        <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-	          <span class="icon-bar"></span>
-	          <span class="icon-bar"></span>
-	          <span class="icon-bar"></span>
-	        </button>
-	        <a class="brand" href="#">Nettuts Tutorial</a>
-	        <div class="nav-collapse collapse">
-	          <ul class="nav">
-	            <li class="active"><a href="#">Blog</a></li>
-	          </ul>
-	        </div><!--/.nav-collapse -->
-	      </div>
-	    </div>
-	  </div>
-
-	  <div class="container" data-role="main">
-	    {{--since we are using mustache as the view, it does not have a concept of sections like blade has, so instead of using @yield here, our nested view will just be a variable that we can echo--}}
-
-	    {{ $content }}
-
-	  </div> <!-- /container -->
-
-	  <!-- Placed at the end of the document so the pages load faster -->
-	  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> <!-- use Google CDN for jQuery to hopefully get a cached copy -->
-	  <script src="{{ asset('node_modules/underscore/underscore-min.js') }}"></script>
-	  <script src="{{ asset('node_modules/backbone/backbone-min.js') }}"></script>
-	  <script src="{{ asset('node_modules/mustache/mustache.js') }}"></script>
-	  <script src="{{ asset('js/bootstrap.min.js') }}"></script>
-	  <script src="{{ asset('js/app.js') }}"></script>
-	  @yield('scripts')
-	</body>
-	</html>
+***
 
 
+**public/js/app.js**
+
+We will wrap all of our code in an immediately-invoking-anonymous-function that passes in a few global objects.  We will then alias these global objects to something more useful to us.  Also we will cache a few global objects inside the document ready function.
+
+```js
+//alias the global object
+//alias jQuery so we can potentially use other libraries that utilize $
+//alias Backbone to save us on some typing
+(function(exports, $, bb){
+
+    //document ready
+    $(function(){
+
+        /**
+         ***************************************
+         * Cached Globals
+         ***************************************
+         */
+        var $window, $body, $document;
+
+        $window   = $(window);
+        $document = $(document);
+        $body     = $('body');
 
 
-public/views/app.mustache
+    });//end document ready
 
-	<dl>
-	    <dt>Q. What did Biggie say when he watched inception?</dt>
-	    <dd>A. "It was all a dream!"</dd>
-	</dl>
+}(this, jQuery, Backbone));
+```
 
 
+***
 
-app/routes.php
-	
-	<?php
+**public/views/layouts/application.blade.php**
 
-	//backbone app route
-	Route::get('/', function()
-	{
-	    //change our view name to the view we created in a previous step
-	    //notice that we do not need to provide the .mustache extension
-	    return View::make('layouts.application')->nest('content', 'app');
-	});
+Just a simple HTML layout file.  We are however using the `asset` helper from Laravel to help in creating paths to our assets.  It is good practice to use this type of helper, because if you ever happen to move your project into a sub-folder, all of your links will still work.
+
+We made sure that we included all of our dependencies in this file, and also added the jQuery dependency.  I chose to get jQuery from the Google CDN, because chances are the visiting user of this site will already have a copy from that CDN cached in their browser, saving us from having to complete the HTTP request for it.
+
+One important thing to note here is the way in which we are nesting our view.  Mustache does not have Block Sections like Blade does, so instead, the contents of the nested view will be made available under a variable with the name of the section.  I will point this out later when we actually render this view.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Laravel4 & Backbone | Nettuts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A single page blog built using Backbone.js, Laravel, and Twitter Bootstrap">
+  <meta name="author" content="Conar Welsh">
+
+  <link href="{{ asset('css/styles.css') }}" rel="stylesheet">
+
+  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+  <script src="{{ asset('js/html5shiv.js') }}"></script>
+  <![endif]-->
+</head>
+<body>
+
+  <div id="notifications">
+  </div>
+
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="brand" href="#">Nettuts Tutorial</a>
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+            <li class="active"><a href="#">Blog</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+  </div>
+
+  <div class="container" data-role="main">
+    {{--since we are using mustache as the view, it does not have a concept of sections like blade has, so instead of using @yield here, our nested view will just be a variable that we can echo--}}
+
+    {{ $content }}
+
+  </div> <!-- /container -->
+
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> <!-- use Google CDN for jQuery to hopefully get a cached copy -->
+  <script src="{{ asset('node_modules/underscore/underscore-min.js') }}"></script>
+  <script src="{{ asset('node_modules/backbone/backbone-min.js') }}"></script>
+  <script src="{{ asset('node_modules/mustache/mustache.js') }}"></script>
+  <script src="{{ asset('js/bootstrap.min.js') }}"></script>
+  <script src="{{ asset('js/app.js') }}"></script>
+  @yield('scripts')
+</body>
+</html>
+```
+
+***
+
+**public/views/app.mustache**
+
+Just a simple view that we will nest into our layout.
+
+```html
+<dl>
+    <dt>Q. What did Biggie say when he watched inception?</dt>
+    <dd>A. "It was all a dream!"</dd>
+</dl>
+```
+
+***
+
+**app/routes.php**
+
+Laravel should have already provided you with a default route, all we are doing here is changing the name of the view which that route is going to render.  
+
+Remember above I told you that the nested view was going to be available under a variable named whatever the parent section was?  Well notice in the `nest` command we called the section "content" that means if we echo `$content` from our layout, we will get the contents of that view.  If we were to do `return View::make('layouts.application')->nest('foobar', 'app');` the our nested view would be available under a variable named `$foobar`.
+
+```php
+<?php
+
+//backbone app route
+Route::get('/', function()
+{
+    //change our view name to the view we created in a previous step
+    //notice that we do not need to provide the .mustache extension
+    return View::make('layouts.application')->nest('content', 'app');
+});
+```
 
 
 
 
-With all of our basic files in place, we can test to ensure everything went OK.  Laravel 4 utilizes the new PHP web server to provide us with a great little web environment.  So long to the days of having a million virtual hosts setup on your development machine for every project that you work on!
+With all of our basic files in place, we can test to ensure everything went OK.  Laravel 4 utilizes the new PHP web server to provide us with a great little development environment.  So long to the days of having a million virtual hosts setup on your development machine for every project that you work on!
 
 > Note:: make sure that you compiled your LESS file!
 
