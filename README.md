@@ -1389,44 +1389,6 @@ What is actually failing is the assertViewHas method in our controller tests.  I
 
 ## Sidebar Discussion
 
-Before we proceed with the implementations, let's break for a quick sidebar discussion on the true responsibilities of an MVC.
-
-From [The Gang of 4](http://www.amazon.com/Design-Patterns-Object-Oriented-Professional-Computing/dp/0201634988):
-
-"The Model is the application object, the View is its screen presentation, and the Controller defines the way the user interface reacts to user input."
-
-They also go into describing how a developer would manage different types of interfaces to interact with the application.  They state that the response mechanism would be encapsulated into the controller, and that there would be a class hierarchy of controllers that would allow the developer to implement different response strategies.
-
-So, for instance, if you were to implement a view that is disabled, you would simply use a subclass of the controller that completely ignored input events altogether.
-
-Let's apply this logic to our application.  We have 2 basic types of input, and API and a UI.  Which by their definition would mean that we would have an APIPostsController, and a UIPostsController.  Great, that makes sense and we are already off to a good start there.
-
-
-
-
-
-
-
-
-
-
-In my opinion a controller should not contain any more logic than request and response, but the distance between that defined setup and data-layer abstraction (the model) is quite far.  There are many tasks that will need to be completed before just handing data to a view:
-
-- filtering: you may need to adjust your response according to certain filters
-- pagination: what if you only want to show certain segments of data at a time
-- validation: checking that input data is valid
-- authentication/authorization: ensuring that the requesting user is allowed access to this data
-- and many more
-
-If we place these types of logic in our controller, the usage of that functionality is only available to that route.  So where else can we put it... in the model?  If we place this logic in the model, what was a clean abstraction of our database is now becoming cluttered with all kinds of application logic... does not quite feel right.  What if 2 versions of our API have different methods of parsing input data, handling pagination, or validating... are we going to put just alternate versions of the same method in the model?
-
-The short version of this story is that we need a separation of concerns.
-
-This is where repositories come into the picture.  Repositories fill the gap between the model and the controller in beautiful fashion.  Our models are able to stay focused specifically on how to manage data coming in and out of the data-layer, and our controllers can focus solely on user input and responses.  We now will have re-usable, swap-able, test-able and version-able classes to work with to handle all of the above needs.  Repositories can now handle all of the growing-pains of our application, whilst leaving controllers and models to do what they do best!
-
-Now that we have a general overview of what I consider to be a very functional application structure... our MVRC... let's start putting the pieces in place and getting our tests to pass.
-
-If you take a read through the controller tests, you will see that all we really care about is how the controller is interacting with the repository.  So let's see how light that makes our controllers.
 
 **app/controllers/V1/PostsController.php**
 
