@@ -489,7 +489,7 @@ First let's go over a few general guidelines to keep in mind while we build an A
 
 		- index: return a collection of resources
 		- show: return a single resource
-		- create: return a form, this form should detail out the required fields, validation, and labels as best as possible.  As well as anything else needed to properly create a resource
+		- create: return a form, this form should detail out the required fields, validation, and labels as best as possible.  As well as anything else needed to properly create a resource.  Even though this is a JSON API, it is very useful to return a form here.  Both a computer and a person can parse through this form, and very easily decipher which items are needed to fill out this form successsfully.  This is a very easy way to "document" the needs of your API.
 		- store: store a new resource, and return with the proper status code: 201
 		- edit: return a form filled with the current state of a resource, this form should detail out the required fields, validation, and labels as best as possible.  As well as anything else needed to properly edit a resource
 		- update: update an existing resource, and return with the proper status code
