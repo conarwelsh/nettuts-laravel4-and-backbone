@@ -2,9 +2,9 @@
 
 For this tutorial, we are going to be building a single page app using Laravel 4 and Backbone.js.  Both frameworks make it very easy to use a template engine other than their respective default, so we are going to use Mustache, which is an engine that is common to both.  By using the same templating language on both sides of our application, we will be able to share our views betweem them, saving us from having to repeat our work multiple times.
 
-Our Backbone app will be powered by a Laravel 4 JSON API which we will develop.  Laravel 4 comes with some new features that make the development of this API very easy.  I will show you a few tricks along the way to allow you to stay a bit more organized in your development.
+Our Backbone app will be powered by a Laravel 4 JSON API which we will develop together.  Laravel 4 comes with some new features that make the development of this API very easy.  I will show you a few tricks along the way to allow you to stay a bit more organized.
 
-All of our dependencies will be managed by Package Managers, there will be no manual downloading and updating of libraries for this application!  In addition, I will be showing you how to leverage a little extra power from some of our dependencies.
+All of our dependencies will be managed by Package Managers, there will be no manual downloading or updating of libraries for this application!  In addition, I will be showing you how to leverage a little extra power from some of our dependencies.
 
 For this project we will be using:
 
@@ -154,7 +154,7 @@ Finally, you just need to make sure that your storage folder can be written to.
 
 Laravel is now installed, with all of its dependencies, as well as our own dependencies.  Now let's setup our Backbone install!
 
-Just like our `composer.json` installed all of our server-side dependencies, we will create a `package.json` in our *public* to install all of our client-side dependencies.
+Just like our `composer.json` installed all of our server-side dependencies, we will create a `package.json` in our *public folder* to install all of our client-side dependencies.
 
 For our client-side dependencies we will use:
 
@@ -555,7 +555,7 @@ First of all, the generator placed the views it created in the `app/views` folde
 
 **app/routes.php**
 
-We decided that we wanted our API to be versioned, so we will need to move the routes the generator created for us into the version group.  We will also want to namespace our controllers with the corresponding version, so that we can have a different set of controllers for each version we build.  The comments resource needs to also be nested under the posts resource.
+We decided that we wanted our API to be versioned, so we will need to move the routes the generator created for us into the version group.  We will also want to namespace our controllers with the corresponding version, so that we can have a different set of controllers for each version we build.  Also the comments resource needs to be nested under the posts resource.
 
 ```php
 <?php
@@ -1389,6 +1389,63 @@ What is actually failing is the assertViewHas method in our controller tests.  I
 
 ## Sidebar Discussion
 
+Before we proceed with the implementations, let's break for a quick sidebar discussion on the true responsibilities of an MVC.
+
+From [The Gang of 4](http://www.amazon.com/Design-Patterns-Object-Oriented-Professional-Computing/dp/0201634988):  *"The Model is the application object, the View is its screen presentation, and the Controller defines the way the user interface reacts to user input."*
+
+The point of using a structure like this is to remain encapsulated and flexible, allowing us to exchange and reuse components.  Let's go through each part of the MVC and talk about its reusability and flexibility:
+
+#### View
+
+I think most people would agree that a View is supposed to be a simple visual representation of data, and should not contain much logic.  In our case, as developers for the web, our View tends to be HTML or XML.
+
+- **reusable**: always, almost anything can create a view
+- **flexible**: not having any real logic in these layers makes this very flexible
+
+
+#### Controller
+
+If a Controller "defines the way the user interface reacts to user input", then it's responsibility should be to listen to user input (GET, POST, Headers, etc), and build out the current state of the application. In my opinion, a Controller should be very light, and should not contain more code than is required to accomplish the above.
+
+- **reusable**:  We have to remember that our Controllers return an opinionated View, so we cannot ever call that Controller method in a practical way to use any of the logic inside it.  Therefor any logic placed in Controller methods, must be specific to that Controller method, if the logic is reusable, it should be placed elsewhere.
+- **flexible**:  In most PHP MVC's, the Controller is tied directly to the route, which does not leave us very much flexibility.  Laravel fixes this issue by allowing us to declare routes that use a controller, so we can now swap out our controllers with different implementations if need be:
+
+```php
+Route::get('/', array(
+	'uses' => 'SomeController@action'
+));
+```
+
+#### Model
+
+The Model is the "application object" in our definition from the Gang of Four.  This is a very generic definition.  In addition, we just decided to offload any logic that needs to be reusable from our Controller, and since Model is the only component left in our defined structure, its logical to assume that this is the new home for that logic.  However, I think the Model should not contain any logic like this.  In my opinion we should think of "application object" as an object that represents its place in the data-layer, whether that be a table, row, or collection entirely depends on state.  The model should contain no more than getters and setters for data (including relationships).
+
+- **reusable**: If we follow the above practice and make our Models be an object that represents its place in the database, this object remains very reusable.  Any part of our system can use this model, and by doing so gain complete and unopinionated access to the database.
+- **flexible**:  Following the above practice, our Model is basically an implementation of an ORM, this allows us to be flexible, because we now have the power to change ORM's whenever we would like to just by adding a new Model.  We should probably have a pre-defined interface that our Model's must abide by, such as: all, find, create, update, delete.  Implementation of a new ORM would be as simple as ensuring that the previously mentioned interface was accomodated.
+
+#### Repository
+
+Just by carefully defining our MVC components, we orphaned all kinds of logic into no-man's land.  This is where Repositories come in to fill the void.  Repositories become the intermediary of the Controllers and Models.  A typical request would be something like this:
+
+- Controller receives all required user input, and passes to the repository
+- Repository does any "pre-gathering" actions such as validation of data, authorization, authentication, etc.  If these "pre-gathering" actions are successful, then the request is passed to the Model for processing.
+- The Model will process all of the data into the data-layer, and return the new state.
+- Repository will handle any "post-gathering" routines and return the state to the controller
+- Controller will then create the appropriate view using the information provided by the repository.
+
+Our Repository ends up as flexible and organized as we have made our Controllers and Models, allowing us to reuse this in most parts of our system, as well as being able to swap it out for another implementation if needed.
+
+We have already seen an example of swapping out a repository for another implementation in the Controller tests above.  Instead of using our default Repository, we instead asked the IoC container to provide the controller with an instance of a Mockery object.  We have this same power for all of our components.
+
+What we have accomplised here by adding another layer to our MVC, is a very organized, scalable, and testable system.  Let's start putting the pieces in place and getting our tests to pass.
+
+
+
+## Controller Implementation
+
+If you take a read through the controller tests, you will see that all we really care about is how the controller is interacting with the repository.  So let's see how light and simple that makes our controllers.
+
+> Note: in TDD, the objective is to do no more work than is required to make your tests pass.  So we want to do the absolute bare minimum here.
 
 **app/controllers/V1/PostsController.php**
 
@@ -1598,22 +1655,24 @@ class PostsCommentsController extends BaseController {
 }
 ```
 
-It does not get much simpler than that, all it is doing is handing the input data to the repository, taking the response from that, and handing it to the view.
+It does not get much simpler than that, all the Controllers are doing is handing the input data to the repository, taking the response from that, and handing it to the View, the View in our case is merely JSON for most of our methods.  When we return an Eloquent Collection, or Eloquent Model from a Controller in Laravel 4, the object is parsed into JSON auto-magically, which makes our job very easy.
 
 > Note: notice that we added a few more "use" statements to the top of the file, to support the other classes that we are using.  Do not forget this when you are working within a namespace.
 
-The only thing that is a bit tricky in this controller is the constructor.  Notice we are passing in a typed variable, yet there is no point that we have access to the instantiation of this controller to actually insert that class... welcome to dependency injection!  What we are actually doing here is hinting to our controller that we have a dependency needed to run this class.  Laravel will then take the type hint that we provided, and run `App::make('PostRepositoryInterface')`, and insert what is returned into the constructor of the controller for us.
+The only thing that is a bit tricky in this controller is the constructor.  Notice we are passing in a typed variable as a dependency for this Controller, yet there is no point that we have access to the instantiation of this controller to actually insert that class... welcome to dependency injection!  What we are actually doing here is hinting to our controller that we have a dependency needed to run this class, and what its class name is (or its IoC binding name).  Laravel uses `App::make()` to create its Controllers before calling them.  `App::make()` will try to resolve an item, by looking for any bindings that we may have declared, and/or using the auto-loader to provide an instance.  In addition it will also resolve any dependencies needed to instantiate that class for us, by more-or-less recursively calling `App::make()` on each of the dependencies.
 
-The observant of you will notice that what we are trying to pass in as a dependency is an interface, and as you know, an interface cannot be instantiated.  This is where it gets cool, we are actually going to tell Laravel that whenever an instance of `PostRepositoryInterface` is requested, to actually return something else.
+The observant of you will notice that what we are trying to pass in as a dependency is an interface, and as you know, an interface cannot be instantiated.  This is where it gets cool, and we actually already did the same thing in our tests.  In our tests however we used `App::instance()` to provide an already created instance instead of the interface.  For our Controllers, we are actually going to tell Laravel that whenever an instance of `PostRepositoryInterface` is requested, to actually return an instance of `EloquentPostRepository`.
 
 Open up your `app/routes.php` file and add the following to the top of the file
 	
-	App::bind('PostRepositoryInterface', 'EloquentPostRepository');
-	App::bind('CommentRepositoryInterface', 'EloquentCommentRepository');
+```php
+App::bind('PostRepositoryInterface', 'EloquentPostRepository');
+App::bind('CommentRepositoryInterface', 'EloquentCommentRepository');
+```
 
-Now if you were to ever change your repository to instead use a different ORM than Eloquent, or maybe a file-based driver, all you have to do is change these 2 lines and you are good to go.
+After adding those lines, anytime `App::make()` asks for an instance of `PostRepositoryInterface`, instead it will create an instance of `EloquentPostRepository`, which is assumed to implement `PostRepositoryInterface`.  If you were to ever change your repository to instead use a different ORM than Eloquent, or maybe a file-based driver, all you have to do is change these 2 lines and you are good to go, your Controllers will still work as normal.  The Controllers actual dependency is any object that implements that interface, we can determine at run-time what that implementation actually is.
 
-PostRepositoryInterface and CommentRepositoryInterface must actually exist, and the bindings must actually implement that interface.  So let's create them now:
+PostRepositoryInterface and CommentRepositoryInterface must actually exist, and the bindings must actually implement them.  So let's create them now:
 
 **app/repositories/PostRepositoryInterface.php**
 
@@ -1648,9 +1707,11 @@ interface CommentRepositoryInterface {
 }
 ```
 
-Now that we have our 2 interfaces built, our implementations contain each of these methods.  Let's build those now.
+Now that we have our 2 interfaces built, we must provide implementations of these interfaces.  Let's build them now.
 
 **app/repositories/EloquentPostRepository.php**
+
+As the name of this implementation implies, we are relying on Eloquent, which we can call directly.  If you had other dependencies, remember that `App::make()` is being used to resolve this repository, so you can feel free to use the same constructor method we used with our Controllers to inject your dependencies.
 
 ```php
 <?php
@@ -1788,7 +1849,8 @@ class EloquentCommentRepository implements CommentRepositoryInterface {
 ```
 
 
-If you take a look in our repositories, there are a few Exceptions that we are throwing, which are not native, nor do they belong to Laravel.  Those are custom Exceptions that we are using to simplify our code.  By using custom Exceptions, we are able to easily halt the progress of the application if certain conditions are met.  For instance if a post is not found, we can just toss a NotFoundException, and the application will handle it accordingly, but not by showing a 500 error as usual, instead we are going to setup custom error handlers.
+If you take a look in our repositories, there are a few Exceptions that we are throwing, which are not native, nor do they belong to Laravel.  Those are custom Exceptions that we are using to simplify our code.  By using custom Exceptions, we are able to easily halt the progress of the application if certain conditions are met.  For instance if a post is not found, we can just toss a NotFoundException, and the application will handle it accordingly, but not by showing a 500 error as usual, instead we are going to setup custom error handlers.  You could alternatively use `App::abort(404)` or something along those lines, but I find that this method saves me many conditional statements and repeat code, as well as allowing me to adjust the implementation of error reporting in a single place very easily.
+
 
 First let's define the custom Exceptions.  Create a file in your `app` folder called `errors.php`
 
@@ -1814,6 +1876,11 @@ class ValidationException extends Exception {
 
 	protected $messages;
 
+	/**
+	 * We are adjusting this constructor to receive an instance 
+	 * of the validator as opposed to a string to save us some typing
+	 * @param Validator $validator failed validator object
+	 */
 	public function __construct($validator)
 	{
 		$this->messages = $validator->messages();
@@ -1841,7 +1908,7 @@ class NotFoundException extends Exception {
 
 Very simple Exceptions, notice for the ValidationException, we can just pass it the failed validator instance, and it will handle the error messages accordingly!
 
-Now we need to define our error handlers, that will be called when one of these Exceptions are thrown.
+Now we need to define our error handlers, that will be called when one of these Exceptions are thrown.  These are basically Event listeners, whenever one of these exceptions are thrown, it is treated as an Event and calls the appropriate function.  It is very simple to add logging, or any other error handling procedures here.
 
 **app/filters.php**
 
@@ -1911,6 +1978,8 @@ We must now let our auto-loader know about these new files.  So we must tell Com
 
 **composer.json**
 
+Notice that we added the `"app/errors.php"` line.
+
 ```json
 {
     "require": {
@@ -1947,24 +2016,42 @@ We must now tell Composer to actually check for these files, and include them in
 
 	composer dump-autoload
 
-Great, so we have completed our controllers and our repositories, the last 2 items in our MVRC that we have to take care of are our models and views, both of which are pretty straight forward.
+Great, so we have completed our controllers and our repositories, the last 2 items in our MVRC that we have to take care of is the models and views, both of which are pretty straight forward.
 
 **app/models/Post.php**
 
 ```php
 <?php
-
+/**
+ * Represent a Post Item, or Collection
+ */
 class Post extends Eloquent {
 
+	/**
+	 * Items that are "fillable"
+	 * meaning we can mass-assign them from the constructor
+	 * or $post->fill()
+	 * @var array
+	 */
     protected $fillable = array(
     	'title', 'content', 'author_name'
     );
 
+    /**
+     * Validation Rules
+     * this is just a place for us to store these, you could
+     * alternatively place them in your repository
+     * @var array
+     */
     public static $rules = array(
     	'title'       => 'required',
 		'author_name' => 'required'
     );
 
+    /**
+     * Define the relationship with the comments table
+     * @return Collection collection of Comment Models
+     */
     public function comments()
 	{
 		return $this->hasMany('Comment');
@@ -1977,19 +2064,37 @@ class Post extends Eloquent {
 
 ```php
 <?php
-
+/**
+ * Represent a Comment Item, or Collection
+ */
 class Comment extends Eloquent {
 
+	/**
+	 * Items that are "fillable"
+	 * meaning we can mass-assign them from the constructor
+	 * or $comment->fill()
+	 * @var array
+	 */
 	protected $fillable = array(
 		'post_id', 'content', 'author_name'
 	);
 
+	/**
+     * Validation Rules
+     * this is just a place for us to store these, you could
+     * alternatively place them in your repository
+     * @var array
+     */
 	public static $rules = array(
 		'post_id'     => 'required|numeric',
 		'content'     => 'required',
 		'author_name' => 'required'
 	);
 
+	/**
+     * Define the relationship with the posts table
+     * @return Model parent Post model
+     */
 	public function post()
 	{
 		return $this->belongsTo('Post');
@@ -2003,14 +2108,18 @@ As far as views are concerned, I am just going to mark up some simple bootstrap-
 > Note: I skipped a few views, as we will not be using them in this tutorial.
 
 **public/views/posts/index.mustache**
+The index page view, we will just loop over all of our posts, showing the post partial for each.
 
-```
+
+```html
 {{#posts}}
 	{{> posts._post}}
 {{/posts}}
 ```
 
 **public/views/posts/show.mustache**
+
+The view we will use to show an entire post and its comments
 
 ```html
 <article>
@@ -2039,6 +2148,8 @@ As far as views are concerned, I am just going to mark up some simple bootstrap-
 
 **public/views/posts/_post.mustache**
 
+The partial used to show a post in a list, this will be used in our index view
+
 ```html
 <article data-toggle="view" data-target="posts/{{ id }}">
 	<h3>{{ title }} {{ id }}</h3>
@@ -2047,6 +2158,8 @@ As far as views are concerned, I am just going to mark up some simple bootstrap-
 ```
 
 **public/views/posts/_form.mustache**
+
+The form needed to create a post, we will use this from our API, but this could also be a useful view in an admin panel and other places, which is why we choose to make it a partial.
 
 ```html
 {{#exists}}
@@ -2090,6 +2203,8 @@ As far as views are concerned, I am just going to mark up some simple bootstrap-
 
 **public/views/comments/_comment.mustache**
 
+Represent a single comment in a list of comments
+
 ```html
 <h5>
 	{{ author_name }}
@@ -2101,6 +2216,8 @@ As far as views are concerned, I am just going to mark up some simple bootstrap-
 ```
 
 **public/views/comments/_form.mustache**
+
+The form needed to create a comment, both used in the API and the Show Post view
 
 ```html
 {{#exists}}
@@ -2135,9 +2252,10 @@ As far as views are concerned, I am just going to mark up some simple bootstrap-
 </form>
 ```
 
-We also will need a notifications view
 
 **public/views/layouts/_notification.mustache**
+
+A helper view partial to allow us to show a notification.
 
 ```html
 <div class="alert alert-{{type}}">
@@ -2152,26 +2270,35 @@ Great, we have all of our API components in place.  Let's run our unit tests to 
 
 	vendor/phpunit/phpunit/phpunit.php
 
-Your first run of this test should pass with flying (green) colors.  However, if you were to run this test again, you will notice that it fails now with a handful of errors, and that is because our repository tests actually tested the database, and in doing so deleted some of the records our previous tests used to assert values.  This is an easy fix though, all we have to do is tell our tests that they need to re-seed the database after each test.  In addition, we did not receive a noticable error for this, but we did not close Mockery after each test either, this is a requirement of Mockery that you can find in their docs.  So let's add both missing methods.
+Your first run of this test should pass with flying (green) colors.  However, if you were to run this test again, you will notice that it fails now with a handful of errors, and that is because our repository tests actually tested the database, and in doing so deleted some of the records our previous tests used to assert values.  This is an easy fix, all we have to do is tell our tests that they need to re-seed the database after each test.  In addition, we did not receive a noticable error for this, but we did not close Mockery after each test either, this is a requirement of Mockery that you can find in their docs.  So let's add both missing methods.
 
 open up `app/tests/TestCase.php` and add the following 2 methods
 
 ```php
+/**
+ * setUp is called prior to each test
+ */
 public function setUp()
 {
 	parent::setUp();
 	$this->seed();
 }
 
+/**
+ * tearDown is called after each test
+ * @return [type] [description]
+ */
 public function tearDown()
 {
 	Mockery::close();
 }
 ```
 
-This is great, we now said that at every "tear down", which is run after each test completes, to re-seed the database.  However we still have one problem, everytime you re-seed, it is only going to append new rows to the tables, our tests are looking for items with a row ID of 1, so we still have a few changes to make.  We just need to tell the database to truncate our tables when seeding:
+This is great, we now said that at every "setUp", which is run before each test, to re-seed the database.  However we still have one problem, everytime you re-seed, it is only going to append new rows to the tables, our tests are looking for items with a row ID of 1, so we still have a few changes to make.  We just need to tell the database to truncate our tables when seeding:
 
 **app/database/seeds/CommentsTableSeeder.php**
+
+Before we insert the new rows, we will truncate the table, deleting all rows and resetting the auto-increment counter.
 
 ```php
 <?php
@@ -2279,9 +2406,9 @@ Now you should be able to run the tests any number of times, and get passing tes
 
 ## Backbone App
 
-Now that we have completed all of the back-end work, we can move forward to creating a nice user interface to access all of that data. We will keep this part of the project a little bit on the simpler side, and I warn you that my approach can be considered an opinionated one. I have seen so many people with so many different methods for structuring a Backbone application. My trials and errors have led me to my current method, if you do not agree with it, than my hope is that it may inspire you to find your own!
+Now that we have completed all of the back-end work, we can move forward to creating a nice user interface to access all of that data. We will keep this part of the project a little bit on the simpler side, and I warn you that my approach can be considered an opinionated one. I have seen many people with so many different methods for structuring a Backbone application. My trials and errors have led me to my current method, if you do not agree with it, my hope is that it may inspire you to find your own!
 
-Since we are using mustache as our templating engine, we can share our views between the client and server!  The trick is in how you load the views, we are going to use AJAX in this tutorial, but it is just as easy to load them all into the main template, or precompile them.
+We are going to use the Mustache templating engine instead of Underscore, this will allow is to share our views between the client and server!  The trick is in how you load the views, we are going to use AJAX in this tutorial, but it is just as easy to load them all into the main template, or precompile them.
 
 ### Router
 
@@ -2368,6 +2495,7 @@ Route::group(array('prefix' => 'v1'), function()
 
 /**
  * Method #1: use catch-all
+ * optionally commented out while we use Method 2
  */
 // change your existing app route to this:
 // we are basically just giving it an optional parameter of "anything"
@@ -2400,9 +2528,11 @@ Route::get('posts/{id}', function($id)
 ```
 
 
-Pretty cool huh?! Regardless of which method, or the combination, your Backbone router will end up the same.
+Pretty cool huh?! Regardless of which method we use, or the combination of both, your Backbone router will end up mostly the same.
 
-Keep in mind a few things while choosing which method to use, if you use the catch-all it will do just like the name implies... catch-ALL... this means there is no such thing as a 404 on your site anymore, no matter the request, its landing on the app page (unless you manually toss an exception somewhere such as your repository). The inverse is, with defining each route... now you have 2 sets of routes to manage. Both methods have their ups and downs, but both are equally easy to deal with.
+Notice that we are using our Repository again, this is yet another reason why Repositories are a useful addition to our framework.  We can now run almost all of the logic that the controller does, but without repeating hardly any of the code!
+
+Keep in mind a few things while choosing which method to use, if you use the catch-all it will do just like the name implies... catch-ALL... this means there is no such thing as a 404 on your site anymore.  No matter the request, its landing on the app page (unless you manually toss an exception somewhere such as your repository). The inverse is, with defining each route... now you have 2 sets of routes to manage. Both methods have their ups and downs, but both are equally easy to deal with.
 
 
 
@@ -2414,10 +2544,13 @@ Keep in mind a few things while choosing which method to use, if you use the cat
 
 One view to rule them all! This BaseView is the view that all of our other Views will inherit from. For our purposes this view has but one job... templating! In a larger app this view is a good place to put other shared logic.
 
+We will simply extend `Backbone.View` and add a `template` function that will return our view from the cache if it exists, or get it via AJAX and place it in the cache.  We have to use synchronous AJAX due to the way that Mustache.js fetches partials, but since we are only retrieving these views if they are not cached we should not receive much of a performance hit here.
+
 ```js
 /**
  ***************************************
  * Array Storage Driver
+ * used to store our views
  ***************************************
  */
 var ArrayStorage = function(){
@@ -2440,8 +2573,20 @@ ArrayStorage.prototype.set = function(key, val)
  ***************************************
  */
 var BaseView = bb.View.extend({
+    
+    /**
+     * Set our storage driver
+     */
     templateDriver: new ArrayStorage,
+
+    /**
+     * Set the base path for where our views are located
+     */
     viewPath: '/views/',
+
+    /**
+     * Get the template, and apply the variables
+     */
     template: function()
     {
         var view, data, template, self;
@@ -2466,18 +2611,34 @@ var BaseView = bb.View.extend({
             return self.getTemplate(partial, true);
         });
     },
+
+    /**
+     * Facade that will help us abstract our storage engine,
+     * should we ever want to swap to something like LocalStorage
+     */
     getTemplate: function(view, isPartial)
     {
         return this.templateDriver.get(view) || this.fetch(view, isPartial);
     },
+
+    /**
+     * Facade that will help us abstract our storage engine,
+     * should we ever want to swap to something like LocalStorage
+     */
     setTemplate: function(name, template)
     {
         return this.templateDriver.set(name, template);
     },
+
+    /**
+     * Function to retrieve the template via ajax
+     */
     fetch: function(view, isPartial)
     {
         var markup = $.ajax({
             async: false,
+
+            //the URL of our template, we can optionally use dot notation
             url: this.viewPath + view.split('.').join('/') + '.mustache'
         }).responseText;
 
@@ -2497,7 +2658,11 @@ The PostView renders a single blog post
 // this view will show an entire post
 // comment form, and comments
 var PostView = BaseView.extend({
+
+	//the location of the template this view will use, we can use dot notation
     view: 'posts.show',
+
+    //events this view should subscribe to
     events: {
         'submit form': function(e)
         {
@@ -2507,6 +2672,8 @@ var PostView = BaseView.extend({
             return this.addComment( $(e.target).serialize() );
         }
     },
+
+    //render our view into the defined `el`
     render: function()
     {
         var self = this;
@@ -2515,25 +2682,36 @@ var PostView = BaseView.extend({
             post: this.model.attributes
         }) );
     },
+
+    //add a comment for this post
     addComment: function(formData)
     {
         var
             self = this,
+
+            //build our url
             action = this.model.url() + '/comments'
         ;
 
+        //submit a post to our api
         $.post(action, formData, function(comment, status, xhr)
         {
+        	//create a new comment partial
             var view = new CommentViewPartial({
+            	//we are using a blank backbone model, since we done have any specific logic needed
                 model: new bb.Model(comment)
             });
-            
+			
+			//prepend the comment partial to the comments list
             view.render().$el.prependTo(self.$('[data-role="comments"]'));
-            
+			
+			//reset the form            
             self.$('input[type="text"], textarea').val('');
             
+            //prepend our new comment to the collection
             self.model.attributes.comments.unshift(comment);
-            
+			
+			//send a notification that we successfully added the comment            
             notifications.add({
                 type: 'success',
                 message: 'Comment Added!'
@@ -2549,10 +2727,12 @@ var PostView = BaseView.extend({
 
 ### Partial Views
 
+We will need a few views to render partials.  We mainly just need to tell the view which template to use, and that it should extend our view that provides the method to fetch our template.
+
 ```js
-// this will be used for rendering a single
-// comment
+// this will be used for rendering a single comment in a list
 var CommentViewPartial = BaseView.extend({
+	//define our template location
     view: 'comments._comment',
     render: function()
     {
@@ -2561,8 +2741,9 @@ var CommentViewPartial = BaseView.extend({
     }
 });
 
-
+//this view will be used for rendering a single post in a list
 var PostViewPartial = BaseView.extend({
+	//define our template location
     view: 'posts._post',
     render: function()
     {
@@ -2576,9 +2757,14 @@ var PostViewPartial = BaseView.extend({
 
 ### Blog View
 
+This is our overall application view.  It contains our configuration logic, as well as handling the fetching of our PostCollection.  We also setup a cool little infinite scroll feature.  Notice how we are using jQuery promises to ensure that the fetching of our collection has completed prior to rendering the view.
+
 ```js
 var Blog = BaseView.extend({
+	//define our template location
     view: 'posts.index',
+
+    //setup our app configuration
     initialize: function()
     {
         this.perPage  = this.options.perPage || 15;
@@ -2587,6 +2773,8 @@ var Blog = BaseView.extend({
 
         if(this.options.infiniteScroll) this.enableInfiniteScroll();
     },
+
+    //wait til the collection has been fetched, and render the view
     render: function()
     {
         var self = this;
@@ -2609,6 +2797,8 @@ var Blog = BaseView.extend({
             if(self.options.infiniteScroll) self.enableInfiniteScroll();
         });
     },
+
+    //helper function to limit the amount of posts we show at a time
     paginate: function()
     {
         var posts;
@@ -2618,6 +2808,8 @@ var Blog = BaseView.extend({
 
         return posts;
     },
+
+    //add the next set of posts to the view
     addPosts: function()
     {
         var posts = this.paginate();
@@ -2627,6 +2819,8 @@ var Blog = BaseView.extend({
             this.addOnePost( posts[i] );
         }
     },
+
+    //helper function to add a single post to the view
     addOnePost: function(model)
     {
         var view = new PostViewPartial({
@@ -2634,6 +2828,10 @@ var Blog = BaseView.extend({
         });
         this.$el.append( view.render().el );
     },
+
+    //this function will show an entire post, we could alternative make this its own View
+    //however I personally like having it available in the overall application view, as it 
+    //makes it easier to manage the state
     showPost: function(id)
     {
         var self = this;
@@ -2654,6 +2852,8 @@ var Blog = BaseView.extend({
             self.postView.render();
         });
     },
+
+    //function to run during the onScroll event
     infiniteScroll: function()
     {
         if($window.scrollTop() >= $document.height() - $window.height() - 50)
@@ -2661,6 +2861,8 @@ var Blog = BaseView.extend({
             this.addPosts();
         }
     },
+
+    //listen for the onScoll event
     enableInfiniteScroll: function()
     {
         var self = this;
@@ -2670,6 +2872,8 @@ var Blog = BaseView.extend({
             self.infiniteScroll();
         });
     },
+
+    //stop listening to the onScroll event
     disableInifiniteScroll: function()
     {
         $window.off('scroll');
@@ -2680,6 +2884,8 @@ var Blog = BaseView.extend({
 
 
 ### PostCollection
+
+Setup our PostCollection, we just need to tell the Collection the URL it should use to fetch its contents.
 
 ```js
 // the posts collection is configured to fetch
@@ -2692,6 +2898,8 @@ var PostCollection = bb.Collection.extend({
 
 
 ### Blog Router
+
+Notice that we are not instantiating new instances of our views, we are merely telling them to render.  Our initialize functions are designed to only be ran once, we do not want them to run but once on page load.
 
 ```js
 var BlogRouter = bb.Router.extend({
@@ -2725,6 +2933,8 @@ var BlogRouter = bb.Router.extend({
 
 ### Notifications Collection
 
+We are just going to setup a simple Collection to store user notifications
+
 ```js
 var notifications = new bb.Collection();
 ```
@@ -2732,13 +2942,12 @@ var notifications = new bb.Collection();
 
 ### NotificationsView
 
+This view will handle the displaying and hiding of user notifications.
+
 ```js
 var NotificationView = BaseView.extend({
     el: $('#notifications'),
     view: 'layouts._notification',
-    events: {
-
-    },
     initialize: function()
     {
         this.listenTo(notifications, 'add', this.render);
@@ -2779,14 +2988,37 @@ var notificationView = new NotificationView();
 
 ### Error Handling
 
+Since we used the custom exception handlers for our API.  It makes it very easy to handle any error our API may throw.  Very similar to the way we defined out event listeners for our API in the `app/filters.php` file, we will define event listeners for our app here.  Each code that could be thrown can just show a notification very easily!
+
 ```js
 $.ajaxSetup({
     statusCode: {
+        401: function()
+        {
+            notification.add({
+                type: null, //error, success, info, null
+                message: 'You do not have permission to do that'
+            });
+        },
+        403: function()
+        {
+            notification.add({
+                type: null, //error, success, info, null
+                message: 'You do not have permission to do that'
+            });
+        },
         404: function()
         {
             notification.add({
                 type: 'error', //error, success, info, null
                 message: '404: Page Not Found'
+            });
+        },
+        500: function()
+        {
+            notification.add({
+                type: 'error', //error, success, info, null
+                message: 'The server encountered an error'
             });
         }
     }
@@ -2796,6 +3028,8 @@ $.ajaxSetup({
 
 
 ## Event Listeners
+
+We will need a few global event listeners, to help us navigate through our app without refreshing the page.  We mainly just hijack the default behavior and call `Backbone.history.navigate()`.  Notice how on our first listener, we are specifying the selector to only match those that do not have a data attribute of `bypass`.  This will allow us to create links such as `<a href="/some/non-ajax/page" data-bypass="true">link</a>` that will force the page to refresh.  We could also go a step further here and check whether the link is a local one, as opposed to a link to another site.
 
 ```js
 $document.on("click", "a[href]:not([data-bypass])", function(e){
@@ -2826,6 +3060,8 @@ $document.on("click", "[data-toggle='view']", function(e)
 
 ### Start The App
 
+Now we just need to boot the app, passing in any config values that we need.  Notice the line that checks for the `silentRouter` global variable, this is kind of a hacky way to be able to use both back-end routing methods at the same time.  This allows us to define a variable in the view called `silentRouter` and set it to true, meaning that the router should not actually engage the backbone route, allowing our back end to handle the initial rendering of the page, and just wait for any needed updates or AJAX.
+
 ```js
 var BlogApp = new Blog({
     el             : $('[data-role="main"]'),
@@ -2851,4 +3087,27 @@ bb.history.start({ pushState: true, root: '/', silent: window.silentRouter });
 ## Conclusion
 
 Notice that for the Backbone portion of our app, all we had to do was write some Javascript that knew how to interact with pre-existing portions of our application?  That is what I love about this method!  It may seem like we had a lot of steps to take to get to that portion of things, but really most of that work was just a foundation build-up.  Once we got that initial foundation in place, the actual application logic falls together very simply.
+
+Try adding another feature to this blog, such as User listing and info.  The basic steps you would take would be something like this:
+
+- Use the generator tool to create a new "User" resource.
+- Make the necessary modifications to ensure that the UserController is in the V1 API group
+- Create your Repository and setup the proper IoC bindings in `app/routes.php`
+- Write your Controller tests one at a time using Mockery for the repository, following each test up with the proper implementation to make that test passes.
+- Write your Repository tests one at a time, again, following each test up with the implementation
+- Add in the new functionality to your Backbone App.  I suggest trying 2 different approaches to the location of the User views.  Decide for yourself which is the better implementation.
+	- First place them in their own routes and Main view
+	- Then try incorporating them into the overall BlogView
+
+I hope this gave you some insight into creating a scalable single page app and API using Backbone.js and Laravel 4.  If you have any questions, please ask them in the comment section below!
+
+
+
+
+
+
+
+
+
+
 
