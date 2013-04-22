@@ -1372,7 +1372,7 @@ Now that we have all of our tests in place, let's run PHPUnit again to watch the
 
 You should have a whole ton of failures, and in fact, the test suite probably did not even finish testing before it crashed.  This is OK, that means we have followed the rules of TDD and wrote failing tests before production code, albeit that tpically these tests would be written on at a time, and you would not move on to the next test until you had code that allowed the previous test to pass.  Your terminal should probably look something like mine at the moment:
 
-@@@TODO: SCREENSHOT@@@
+![Screenshot](https://raw.github.com/conarwelsh/nettuts-laravel4-and-backbone/master/public/img/first-failed-screenshot.png)
 
 What is actually failing is the assertViewHas method in our controller tests.  It is kind of intimidating to deal with this kind of an error when we have lumped together all of our tests without any production code at all.  This is why you should always write the tests one at a time, as you will find these errors in stride, as opposed to just a huge mess.  For now just follow my lead into the implementation of our code.
 
