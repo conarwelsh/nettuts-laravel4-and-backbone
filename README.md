@@ -1389,7 +1389,7 @@ What is actually failing is the assertViewHas method in our controller tests.  I
 
 ## Sidebar Discussion
 
-Before we proceed with the implementations, let's break for a quick sidebar discussion on the true responsibilities of an MVC.
+Before we proceed with the implementations, let's break for a quick sidebar discussion on the responsibilities of an MVC.
 
 From [The Gang of 4](http://www.amazon.com/Design-Patterns-Object-Oriented-Professional-Computing/dp/0201634988):  *"The Model is the application object, the View is its screen presentation, and the Controller defines the way the user interface reacts to user input."*
 
@@ -1418,7 +1418,7 @@ Route::get('/', array(
 
 #### Model
 
-The Model is the "application object" in our definition from the Gang of Four.  This is a very generic definition.  In addition, we just decided to offload any logic that needs to be reusable from our Controller, and since Model is the only component left in our defined structure, its logical to assume that this is the new home for that logic.  However, I think the Model should not contain any logic like this.  In my opinion we should think of "application object" as an object that represents its place in the data-layer, whether that be a table, row, or collection entirely depends on state.  The model should contain no more than getters and setters for data (including relationships).
+The Model is the "application object" in our definition from the Gang of Four.  This is a very generic definition.  In addition, we just decided to offload any logic that needs to be reusable from our Controller, and since Model is the only component left in our defined structure, its logical to assume that this is the new home for that logic.  However, I think the Model should not contain any logic like this.  In my opinion we should think of our "application object" in this case as an object that represents its place in the data-layer, whether that be a table, row, or collection entirely depends on state.  The model should contain not much more than getters and setters for data (including relationships).
 
 - **reusable**: If we follow the above practice and make our Models be an object that represents its place in the database, this object remains very reusable.  Any part of our system can use this model, and by doing so gain complete and unopinionated access to the database.
 - **flexible**:  Following the above practice, our Model is basically an implementation of an ORM, this allows us to be flexible, because we now have the power to change ORM's whenever we would like to just by adding a new Model.  We should probably have a pre-defined interface that our Model's must abide by, such as: all, find, create, update, delete.  Implementation of a new ORM would be as simple as ensuring that the previously mentioned interface was accomodated.
@@ -1427,10 +1427,10 @@ The Model is the "application object" in our definition from the Gang of Four.  
 
 Just by carefully defining our MVC components, we orphaned all kinds of logic into no-man's land.  This is where Repositories come in to fill the void.  Repositories become the intermediary of the Controllers and Models.  A typical request would be something like this:
 
-- Controller receives all required user input, and passes to the repository
+- Controller receives all user input, and passes to the repository
 - Repository does any "pre-gathering" actions such as validation of data, authorization, authentication, etc.  If these "pre-gathering" actions are successful, then the request is passed to the Model for processing.
-- The Model will process all of the data into the data-layer, and return the new state.
-- Repository will handle any "post-gathering" routines and return the state to the controller
+- The Model will process all of the data into the data-layer, and return the current state.
+- Repository will handle any "post-gathering" routines and return the current state to the controller
 - Controller will then create the appropriate view using the information provided by the repository.
 
 Our Repository ends up as flexible and organized as we have made our Controllers and Models, allowing us to reuse this in most parts of our system, as well as being able to swap it out for another implementation if needed.
@@ -1657,7 +1657,7 @@ class PostsCommentsController extends BaseController {
 
 It does not get much simpler than that, all the Controllers are doing is handing the input data to the repository, taking the response from that, and handing it to the View, the View in our case is merely JSON for most of our methods.  When we return an Eloquent Collection, or Eloquent Model from a Controller in Laravel 4, the object is parsed into JSON auto-magically, which makes our job very easy.
 
-> Note: notice that we added a few more "use" statements to the top of the file, to support the other classes that we are using.  Do not forget this when you are working within a namespace.
+> Note: notice that we added a few more "use" statements to the top of the file to support the other classes that we are using.  Do not forget this when you are working within a namespace.
 
 The only thing that is a bit tricky in this controller is the constructor.  Notice we are passing in a typed variable as a dependency for this Controller, yet there is no point that we have access to the instantiation of this controller to actually insert that class... welcome to dependency injection!  What we are actually doing here is hinting to our controller that we have a dependency needed to run this class, and what its class name is (or its IoC binding name).  Laravel uses `App::make()` to create its Controllers before calling them.  `App::make()` will try to resolve an item, by looking for any bindings that we may have declared, and/or using the auto-loader to provide an instance.  In addition it will also resolve any dependencies needed to instantiate that class for us, by more-or-less recursively calling `App::make()` on each of the dependencies.
 
@@ -1682,7 +1682,7 @@ PostRepositoryInterface and CommentRepositoryInterface must actually exist, and 
 interface PostRepositoryInterface {
 	public function findById($id);
 	public function findAll();
-	public function paginate();
+	public function paginate($limit = null);
 	public function store($data);
 	public function update($id, $data);
 	public function destroy($id);
