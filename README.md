@@ -55,6 +55,7 @@ Now we have the application structure, but all of the library files that Laravel
 
 PHPUnit and Mockery are only required in our development environment, so we will specify that in our composer.json file.
 
+
 ***
 
 **composer.json**
