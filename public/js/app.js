@@ -44,7 +44,7 @@
          */
         var BaseView = bb.View.extend({
             templateDriver: new ArrayStorage,
-            viewPath: '/views/',
+            viewPath: window.siteUrl + 'views/',
             template: function()
             {
                 var view, data, template, self;
@@ -273,7 +273,7 @@
         // the posts collection is configured to fetch
         // from our API, as well as use our PostModel
         var PostCollection = bb.Collection.extend({
-            url: '/v1/posts'
+            url: window.siteUrl + 'v1/posts'
         });
 
 
@@ -406,7 +406,7 @@
 
         if (typeof window.silentRouter === 'undefined') window.silentRouter = true;
 
-        bb.history.start({ pushState: true, root: '/', silent: window.silentRouter });
+        bb.history.start({ pushState: true, root: window.siteUrl, silent: window.silentRouter });
 
 
 
