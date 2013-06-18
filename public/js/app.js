@@ -36,7 +36,6 @@
         };
 
 
-
         /**
          ***************************************
          * Base View
@@ -357,7 +356,7 @@
             statusCode: {
                 404: function()
                 {
-                    notification.add({
+                    notifications.add({
                         type: 'error', //error, success, info, null
                         message: '404: Page Not Found'
                     });
@@ -407,9 +406,6 @@
         if (typeof window.silentRouter === 'undefined') window.silentRouter = true;
 
         bb.history.start({ pushState: true, root: window.siteUrl, silent: window.silentRouter });
-
-
-
 
     });//end document ready
 

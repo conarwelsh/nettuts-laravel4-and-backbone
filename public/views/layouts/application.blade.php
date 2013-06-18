@@ -47,7 +47,10 @@
   <script src="{{ asset('node_modules/backbone/backbone-min.js') }}"></script>
   <script src="{{ asset('node_modules/mustache/mustache.js') }}"></script>
   <script src="{{ asset('js/bootstrap.min.js') }}"></script>
-  <script>window.siteUrl = '{{ asset('') }}';</script>
+  <script>
+    var fullUrl = '{{ asset('') }}';
+    window.siteUrl = fullUrl.replace(window.location.origin, '');
+   </script>
   <script src="{{ asset('js/app.js') }}"></script>
   @yield('scripts')
 </body>
