@@ -42,7 +42,7 @@ Laravel 4 uses Composer to install all of its dependencies, but first we will ne
 
 	git remote add laravel https://github.com/laravel/laravel
 	git fetch laravel
-	git merge laravel/develop
+	git merge laravel/master
 	git add . && git commit -am "commit the laravel application structure"
 
 Now we have the application structure, but all of the library files that Laravel needs are not yet installed.  You will notice at the root of our application there is a file called `composer.json`.  This is the file that will keep track of all the dependencies that our Laravel application requires.  Before we tell Composer to download and install them, let's first add a few more dependencies that we are going to need.  We will be adding:
