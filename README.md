@@ -38,7 +38,7 @@ Let's start by creating a git repository to work in.  For your reference this en
 
 ### Laravel 4 Install
 
-Laravel 4 uses Composer to install all of its dependencies, but first we will need an application structure to install into.  The develop branch on [Laravel's Github repository](https://github.com/laravel/laravel) is the home for this application structure.  However, since Laravel 4 is currently still in beta, we need to be prepared for this structure to change at any time.  By adding Laravel as a remote repository, we can pull in these changes whenever we need to.  In fact, while it is in beta-mode, it would be good practice to run these commands after each `composer update`.
+Laravel 4 uses Composer to install all of its dependencies, but first we will need an application structure to install into.  The master branch on [Laravel's Github repository](https://github.com/laravel/laravel) is the home for this application structure.  However, we need to be prepared for this structure to change at any time.  By adding Laravel as a remote repository, we can pull in these changes whenever we need to.
 
 	git remote add laravel https://github.com/laravel/laravel
 	git fetch laravel
