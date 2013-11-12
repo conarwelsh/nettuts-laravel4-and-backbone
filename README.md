@@ -1084,9 +1084,9 @@ Now for the repository tests.  In writing our controller tests, we pretty much a
 
 The only other method that we will want to add here, is a `validate` method.  This will mainly be a private method for the repository to ensure that the data is safe to store or update.
 
-For these tests, we are also going to add a `setUp` method, which will allow us to run some code on our class, prior to the execution of *each* test.  Our `setUp` will be a very simple one, we will just make sure that any `setUp` methods defined in parent classes are also called using `parent::setUp()` and the simply add a class variable that stores an instance of our repository.
+For these tests, we are also going to add a `setUp` method, which will allow us to run some code on our class, prior to the execution of *each* test.  Our `setUp` will be a very simple one, we will just make sure that any `setUp` methods defined in parent classes are also called using `parent::setUp()` and then simply add a class variable that stores an instance of our repository.
 
-We will use the power of Laravel's IoC container again to get an instance of our repository.  The `App::make()` command will return an instance of the requested class, it may seem strange that we do not just do `$this->repo = new EloquentCommentRepository()`, but hold that thought, we will come back to it.  You probably noticed that we are asking for a class called `EloquentCommentRepository`, but in our controller tests above we were calling our repository `CommentRepositoryInterface`... put this thought on the back-burner as well... explainations for both are coming I promise!
+We will use the power of Laravel's IoC container again to get an instance of our repository.  The `App::make()` command will return an instance of the requested class, it may seem strange that we do not just do `$this->repo = new EloquentCommentRepository()`, but hold that thought, we will come back to it.  You probably noticed that we are asking for a class called `EloquentCommentRepository`, but in our controller tests above we were calling our repository `CommentRepositoryInterface`... put this thought on the back-burner as well... explanations for both are coming I promise!
 
 ```php
 <?php
