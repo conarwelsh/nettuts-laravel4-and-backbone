@@ -26,8 +26,8 @@ class EloquentCommentRepository implements CommentRepositoryInterface {
 	public function update($post_id, $id, $data)
 	{
 		$comment = $this->findById($post_id, $id);
+		$this->validate($data);
 		$comment->fill($data);
-		$this->validate($comment->toArray());
 		$comment->save();
 		return $comment;
 	}
