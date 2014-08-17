@@ -43,8 +43,8 @@ class EloquentPostRepository implements PostRepositoryInterface {
 	public function update($id, $data)
 	{
 		$post = $this->findById($id);
+		$this->validate($data);
 		$post->fill($data);
-		$this->validate($post->toArray());
 		$post->save();
 		return $post;
 	}
