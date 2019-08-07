@@ -1422,7 +1422,7 @@ Route::get('/', array(
 The Model is the "application object" in our definition from the Gang of Four.  This is a very generic definition.  In addition, we just decided to offload any logic that needs to be reusable from our Controller, and since Model is the only component left in our defined structure, its logical to assume that this is the new home for that logic.  However, I think the Model should not contain any logic like this.  In my opinion we should think of our "application object" in this case as an object that represents its place in the data-layer, whether that be a table, row, or collection entirely depends on state.  The model should contain not much more than getters and setters for data (including relationships).
 
 - **reusable**: If we follow the above practice and make our Models be an object that represents its place in the database, this object remains very reusable.  Any part of our system can use this model, and by doing so gain complete and unopinionated access to the database.
-- **flexible**:  Following the above practice, our Model is basically an implementation of an ORM, this allows us to be flexible, because we now have the power to change ORM's whenever we would like to just by adding a new Model.  We should probably have a pre-defined interface that our Model's must abide by, such as: all, find, create, update, delete.  Implementation of a new ORM would be as simple as ensuring that the previously mentioned interface was accomodated.
+- **flexible**:  Following the above practice, our Model is basically an implementation of an ORM, this allows us to be flexible, because we now have the power to change ORM's whenever we would like to just by adding a new Model.  We should probably have a pre-defined interface that our Model's must abide by, such as: all, find, create, update, delete.  Implementation of a new ORM would be as simple as ensuring that the previously mentioned interface was accommodated.
 
 #### Repository
 
@@ -2271,7 +2271,7 @@ Great, we have all of our API components in place.  Let's run our unit tests to 
 
 	vendor/phpunit/phpunit/phpunit.php
 
-Your first run of this test should pass with flying (green) colors.  However, if you were to run this test again, you will notice that it fails now with a handful of errors, and that is because our repository tests actually tested the database, and in doing so deleted some of the records our previous tests used to assert values.  This is an easy fix, all we have to do is tell our tests that they need to re-seed the database after each test.  In addition, we did not receive a noticable error for this, but we did not close Mockery after each test either, this is a requirement of Mockery that you can find in their docs.  So let's add both missing methods.
+Your first run of this test should pass with flying (green) colors.  However, if you were to run this test again, you will notice that it fails now with a handful of errors, and that is because our repository tests actually tested the database, and in doing so deleted some of the records our previous tests used to assert values.  This is an easy fix, all we have to do is tell our tests that they need to re-seed the database after each test.  In addition, we did not receive a noticeable error for this, but we did not close Mockery after each test either, this is a requirement of Mockery that you can find in their docs.  So let's add both missing methods.
 
 open up `app/tests/TestCase.php` and add the following 2 methods
 
